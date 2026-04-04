@@ -98,6 +98,24 @@ const COMPETITIONS = [
 // --- Kausi 2025 (arkisto) ---
 const TOTAL_EVENTS_2025 = 8;
 
+// Final 2025 standings (hardcoded — custom points system used that season)
+const STANDINGS_2025_FINAL = [
+  { rank: 1,  name: 'Maké',     points: 617 },
+  { rank: 2,  name: 'Antti',    points: 567 },
+  { rank: 3,  name: 'Tomi S',   points: 553 },
+  { rank: 4,  name: 'Petteri',  points: 525 },
+  { rank: 5,  name: 'Iker',     points: 519 },
+  { rank: 6,  name: 'Jukka Vee',points: 519 },
+  { rank: 7,  name: 'Erno',     points: 511 },
+  { rank: 8,  name: 'Tume',     points: 450 },
+  { rank: 9,  name: 'Joonas',   points: 385 },
+  { rank: 10, name: 'Petri',    points: 383 },
+  { rank: 11, name: 'Wili',     points: 204 },
+  { rank: 12, name: 'Otto',     points: 145 },
+  { rank: 13, name: 'JayBee',   points: 66  },
+  { rank: 14, name: 'Saku',     points: 51  },
+];
+
 const COMPETITIONS_2025 = [
   {
     id: 3265280,

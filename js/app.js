@@ -251,44 +251,16 @@ function renderStandings2025() {
   const container = document.getElementById('standings-2025-container');
   if (!container) return;
 
-  const compHeaders = COMPETITIONS_2025.map(c =>
-    `<th class="pts-col">${c.name}</th>`
-  ).join('');
-
-  const standings = buildStandings(COMPETITIONS_2025);
-
-  const prevRankOf = {};
-  if (COMPETITIONS_2025.length > 1) {
-    buildStandings(COMPETITIONS_2025.slice(0, -1)).forEach((p, idx) => {
-      prevRankOf[p.name] = idx + 1;
-    });
-  }
-
-  const rows = standings.map((player, idx) => {
-    const rank = idx + 1;
+  const rows = STANDINGS_2025_FINAL.map(player => {
+    const rank = player.rank;
     const rowClass = rank === 1 ? 'rank-gold' : rank === 2 ? 'rank-silver' : rank === 3 ? 'rank-bronze' : '';
     const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
 
-    let trendHtml = '<span class="trend-same">—</span>';
-    if (!(player.name in prevRankOf)) {
-      trendHtml = '<span class="trend-new">NEW</span>';
-    } else {
-      const diff = prevRankOf[player.name] - rank;
-      if (diff > 0) trendHtml = `<span class="trend-up">▲${diff}</span>`;
-      else if (diff < 0) trendHtml = `<span class="trend-down">▼${Math.abs(diff)}</span>`;
-    }
-
-    const eventCells = COMPETITIONS_2025.map(comp => {
-      const pts = player.events[comp.id];
-      return `<td class="pts-cell">${fmtPts(pts)}</td>`;
-    }).join('');
-
     return `
       <tr class="${rowClass}">
-        <td class="rank-cell">${medal}<span class="rank-trend">${trendHtml}</span></td>
-        <td class="name-cell"><button class="player-btn" data-player="${player.name}">${player.name}</button></td>
-        ${eventCells}
-        <td class="total-cell">${fmtPts(player.total)}</td>
+        <td class="rank-cell">${medal}</td>
+        <td class="name-cell">${player.name}</td>
+        <td class="total-cell">${player.points}</td>
       </tr>`;
   }).join('');
 
@@ -299,17 +271,12 @@ function renderStandings2025() {
           <tr>
             <th class="rank-col">#</th>
             <th>Pelaaja</th>
-            ${compHeaders}
-            <th class="total-col">Yht.</th>
+            <th class="total-col">Pisteet</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
       </table>
     </div>`;
-
-  container.querySelectorAll('.player-btn').forEach(btn => {
-    btn.addEventListener('click', () => openPlayerModal(btn.dataset.player));
-  });
 }
 
 // --- Renderöinti: Osakilpailut ---
