@@ -203,11 +203,10 @@ function renderStandings() {
 
     return `
       <tr class="${rowClass}">
-        <td class="rank-cell">${medal}</td>
+        <td class="rank-cell">${medal}<span class="rank-trend">${trendHtml}</span></td>
         <td class="name-cell"><button class="player-btn" data-player="${player.name}">${player.name}</button></td>
         ${eventCells}
         <td class="total-cell">${fmtPts(player.total)}</td>
-        <td class="trend-cell">${trendHtml}</td>
       </tr>`;
   }).join('');
 
@@ -220,7 +219,6 @@ function renderStandings() {
             <th>Pelaaja</th>
             ${compHeaders}
             <th class="total-col">Yht.</th>
-            <th class="trend-col"></th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -233,7 +231,7 @@ function renderStandings() {
 
   // Update hero subtitle
   const sub = document.getElementById('hero-subtitle');
-  if (sub) sub.innerHTML = `Kaveriporukan frisbeegolfkierros &middot; ${COMPETITIONS.length} / ${TOTAL_EVENTS} osakilpailua pelattu`;
+  if (sub) sub.textContent = `${COMPETITIONS.length} / ${TOTAL_EVENTS} osakilpailua pelattu`;
 
   container.querySelectorAll('.player-btn').forEach(btn => {
     btn.addEventListener('click', () => openPlayerModal(btn.dataset.player));

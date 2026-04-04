@@ -429,11 +429,12 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
 }
 
 .rank-cell {
-  width: 52px;
+  width: 64px;
   text-align: center;
   font-size: 1.1rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .name-cell {
@@ -467,13 +468,22 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
 .rank-silver { background: rgba(192, 192, 192, 0.04); }
 .rank-bronze { background: rgba(205, 127, 50,  0.04); }
 
-/* Trend column */
-.trend-col  { width: 36px; }
-.trend-cell { width: 36px; text-align: center; white-space: nowrap; }
-.trend-up   { color: #00ff88; font-weight: 700; font-size: 0.75rem; }
-.trend-down { color: #ff6b6b; font-weight: 700; font-size: 0.75rem; }
-.trend-same { color: var(--text-faint); font-size: 1rem; line-height: 1; }
-.trend-new  { color: var(--accent-blue); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; }
+/* Trend inline in rank cell */
+.rank-trend { display: inline; margin-left: 0.3rem; vertical-align: middle; }
+.trend-up   { color: #00ff88; font-weight: 700; font-size: 0.7rem; }
+.trend-down { color: #ff6b6b; font-weight: 700; font-size: 0.7rem; }
+.trend-same { color: var(--text-faint); font-size: 0.85rem; line-height: 1; }
+.trend-new  { color: var(--accent-blue); font-size: 0.6rem; font-weight: 700; letter-spacing: 0.04em; }
+
+/* Hide individual event pts columns on mobile */
+@media (max-width: 600px) {
+  .standings-table th.pts-col,
+  .standings-table td.pts-cell { display: none; }
+  .standings-table { min-width: unset; }
+  .standings-table td,
+  .standings-table thead th { padding: 0.65rem 0.5rem; }
+  .rank-cell { width: 48px; }
+}
 
 /* Season progress badge */
 .season-badge {
