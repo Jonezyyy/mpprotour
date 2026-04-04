@@ -178,7 +178,8 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
 .hero-content {
   position: relative;
   z-index: 1;
-  padding: clamp(2.5rem, 5vw, 4rem) 0 2rem;
+  padding-top: clamp(2.5rem, 5vw, 4rem);
+  padding-bottom: 2rem;
   text-align: left;
 }
 

@@ -423,12 +423,9 @@ function buildPlayerProfile(playerName) {
       compId:   comp.id,
       place:    res ? res.place   : null,
       hcScore:  res ? res.hcScore : null,
+      throws:   res ? res.throws  : null,
       pts,
       rating:  (api && api.rating) || (res && res.rating) || null,
-      birdies: api ? api.birdies : null,
-      pars:    api ? api.pars    : null,
-      bogeys:  api ? api.bogeys  : null,
-      eagles:  api ? api.eagles  : null,
     };
   });
 
@@ -525,32 +522,23 @@ function openPlayerModal(playerName) {
       <div class="rating-events-row">${ratingItems}</div>
     </div>` : '';
 
-  const hasHoleData = p.results.some(r => r.birdies !== null);
   const evtRows = p.results.map(r => {
-    let holeCell = '';
-    if (r.birdies !== null) {
-      const eagleHtml = r.eagles > 0 ? `<span class="hs-eagle">\uD83E\uDD85\u00a0${r.eagles}\u00a0</span>` : '';
-      holeCell = `${eagleHtml}<span class="hs-birdie">\uD83D\uDFE2\u00a0${r.birdies}</span>\u00a0<span class="hs-bogey">\uD83D\uDD34\u00a0${r.bogeys}</span>`;
-    } else if (hasHoleData) {
-      holeCell = '\u2013';
-    }
-    const holeTd = hasHoleData ? `<td class="modal-td-c">${holeCell}</td>` : '';
+    const throwsDisplay = r.throws !== null ? r.throws : '\u2013';
     return `<tr>
       <td>${r.compName}</td>
       <td class="modal-td-c">${r.place !== null ? r.place + '.' : '\u2013'}</td>
+      <td class="modal-td-c">${throwsDisplay}</td>
       <td class="modal-td-c hc-cell">${r.hcScore !== null ? r.hcScore.toFixed(2) : '\u2013'}</td>
       <td class="modal-td-c">${fmtPts(r.pts)}</td>
-      ${holeTd}
     </tr>`;
   }).join('');
 
-  const holeHeader = hasHoleData ? '<th>Reik\u00e4tilastot</th>' : '';
   const evtTable = `
     <div class="modal-section">
       <p class="modal-section-title">Tapahtumat</p>
       <div class="table-wrapper">
         <table class="modal-events-table">
-          <thead><tr><th>Kilpailu</th><th>Sija</th><th>HC</th><th>Pts</th>${holeHeader}</tr></thead>
+          <thead><tr><th>Kilpailu</th><th>Sija</th><th>Heitot</th><th>HC</th><th>Pts</th></tr></thead>
           <tbody>${evtRows}</tbody>
         </table>
       </div>
