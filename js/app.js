@@ -64,11 +64,18 @@ function buildStandings(comps = COMPETITIONS) {
   const players = {};
 
   comps.forEach(comp => {
-    comp.results.forEach(res => {
+    // Derive HC-based place at runtime (lower hcScore = better, null = DNF)
+    const resultsForCalc = comp.results.map(res => {
+      if (res.hcScore === null) return { ...res, place: null };
+      const hcPlace = comp.results.filter(r => r.hcScore !== null && r.hcScore < res.hcScore).length + 1;
+      return { ...res, place: hcPlace };
+    });
+
+    resultsForCalc.forEach(res => {
       if (!players[res.name]) {
         players[res.name] = { name: res.name, events: {} };
       }
-      players[res.name].events[comp.id] = calcEventPoints(res.place, comp.results);
+      players[res.name].events[comp.id] = calcEventPoints(res.place, resultsForCalc);
     });
   });
 
@@ -163,7 +170,7 @@ function renderHeroStats() {
 
 function renderStandings() {
   const container = document.getElementById('standings-container');
-
+  if (!container) return;
   // Otsikkorivi kilpailujen mukaan
   const compHeaders = COMPETITIONS.map(c =>
     `<th class="pts-col">${c.name}</th>`
@@ -238,6 +245,73 @@ function renderStandings() {
   });
 }
 
+// --- Renderöinti: Kausi 2025 (arkisto) ---
+
+function renderStandings2025() {
+  const container = document.getElementById('standings-2025-container');
+  if (!container) return;
+
+  const compHeaders = COMPETITIONS_2025.map(c =>
+    `<th class="pts-col">${c.name}</th>`
+  ).join('');
+
+  const standings = buildStandings(COMPETITIONS_2025);
+
+  const prevRankOf = {};
+  if (COMPETITIONS_2025.length > 1) {
+    buildStandings(COMPETITIONS_2025.slice(0, -1)).forEach((p, idx) => {
+      prevRankOf[p.name] = idx + 1;
+    });
+  }
+
+  const rows = standings.map((player, idx) => {
+    const rank = idx + 1;
+    const rowClass = rank === 1 ? 'rank-gold' : rank === 2 ? 'rank-silver' : rank === 3 ? 'rank-bronze' : '';
+    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+
+    let trendHtml = '<span class="trend-same">—</span>';
+    if (!(player.name in prevRankOf)) {
+      trendHtml = '<span class="trend-new">NEW</span>';
+    } else {
+      const diff = prevRankOf[player.name] - rank;
+      if (diff > 0) trendHtml = `<span class="trend-up">▲${diff}</span>`;
+      else if (diff < 0) trendHtml = `<span class="trend-down">▼${Math.abs(diff)}</span>`;
+    }
+
+    const eventCells = COMPETITIONS_2025.map(comp => {
+      const pts = player.events[comp.id];
+      return `<td class="pts-cell">${fmtPts(pts)}</td>`;
+    }).join('');
+
+    return `
+      <tr class="${rowClass}">
+        <td class="rank-cell">${medal}<span class="rank-trend">${trendHtml}</span></td>
+        <td class="name-cell"><button class="player-btn" data-player="${player.name}">${player.name}</button></td>
+        ${eventCells}
+        <td class="total-cell">${fmtPts(player.total)}</td>
+      </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="table-wrapper">
+      <table class="standings-table">
+        <thead>
+          <tr>
+            <th class="rank-col">#</th>
+            <th>Pelaaja</th>
+            ${compHeaders}
+            <th class="total-col">Yht.</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+
+  container.querySelectorAll('.player-btn').forEach(btn => {
+    btn.addEventListener('click', () => openPlayerModal(btn.dataset.player));
+  });
+}
+
 // --- Renderöinti: Osakilpailut ---
 
 function buildResultsTable(comp) {
@@ -278,7 +352,7 @@ function buildResultsTable(comp) {
 
 function renderCompetitions() {
   const container = document.getElementById('competitions-container');
-
+  if (!container) return;
   const cards = COMPETITIONS.map((comp, i) => {
     const winner = comp.results[0];
     const winnerHC = winner.hcScore !== null ? winner.hcScore.toFixed(2) : 'DNF';
@@ -603,6 +677,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initModal();
   renderHeroStats();
   renderStandings();
+  renderStandings2025();
   renderNextEvent();
   renderCompetitions();
   initNav();

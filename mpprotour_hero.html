@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Miesperhe Pro Tour</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Black+Han+Sans&family=Oswald:wght@700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cyan: #00e5ff;
+    --pink: #ff2d9b;
+    --purple: #7b00ff;
+    --orange: #ff6b00;
+    --gold: #ffd000;
+    --dark: #080810;
+  }
+
+  body {
+    background: var(--dark);
+    color: white;
+    font-family: 'Oswald', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* animated grain overlay */
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.35;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* scanlines */
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.07) 2px,
+      rgba(0,0,0,0.07) 4px
+    );
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* background glow blobs */
+  .bg-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .bg-glow-1 { width: 700px; height: 700px; background: rgba(123,0,255,0.25); top: -200px; left: -200px; animation: drift1 12s ease-in-out infinite alternate; }
+  .bg-glow-2 { width: 600px; height: 600px; background: rgba(255,45,155,0.2); bottom: -150px; right: -100px; animation: drift2 14s ease-in-out infinite alternate; }
+  .bg-glow-3 { width: 500px; height: 500px; background: rgba(0,229,255,0.15); top: 50%; left: 50%; transform: translate(-50%,-50%); animation: drift3 10s ease-in-out infinite alternate; }
+
+  @keyframes drift1 { to { transform: translate(80px, 60px); } }
+  @keyframes drift2 { to { transform: translate(-60px, -80px); } }
+  @keyframes drift3 { to { transform: translate(-50%, calc(-50% + 40px)) scale(1.1); } }
+
+  /* ===== TITLE ===== */
+  .hero-title {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 60px 20px 20px;
+    animation: fadeDown 1s ease both;
+  }
+
+  .hero-title .sub {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(14px, 2vw, 20px);
+    letter-spacing: 8px;
+    color: var(--cyan);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .hero-title h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(64px, 12vw, 140px);
+    line-height: 0.85;
+    letter-spacing: -2px;
+    background: linear-gradient(135deg, #fff 0%, var(--gold) 40%, var(--pink) 70%, var(--purple) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    filter: drop-shadow(0 0 40px rgba(255,45,155,0.4));
+  }
+
+  .hero-title .tagline {
+    font-family: 'Oswald', sans-serif;
+    font-size: clamp(12px, 1.5vw, 16px);
+    letter-spacing: 4px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 12px;
+    text-transform: uppercase;
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== COLLAGE STRIP ===== */
+  .collage-strip {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    padding: 40px 0 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    animation: fadeUp 1.2s 0.3s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .logo-item {
+    position: relative;
+    flex: 0 0 auto;
+    cursor: pointer;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), z-index 0s;
+  }
+
+  /* fan layout — each item slightly overlaps and rotates */
+  .logo-item:nth-child(1) { transform: rotate(-6deg) translateY(20px); z-index: 1; }
+  .logo-item:nth-child(2) { transform: rotate(-4deg) translateY(10px); z-index: 2; }
+  .logo-item:nth-child(3) { transform: rotate(-2deg) translateY(4px); z-index: 3; }
+  .logo-item:nth-child(4) { transform: rotate(0deg) translateY(0px); z-index: 7; }
+  .logo-item:nth-child(5) { transform: rotate(2deg) translateY(4px); z-index: 3; }
+  .logo-item:nth-child(6) { transform: rotate(4deg) translateY(10px); z-index: 2; }
+  .logo-item:nth-child(7) { transform: rotate(6deg) translateY(20px); z-index: 1; }
+
+  .logo-item:hover {
+    transform: rotate(0deg) translateY(-20px) scale(1.15) !important;
+    z-index: 20 !important;
+  }
+
+  .logo-item img {
+    width: clamp(120px, 14vw, 200px);
+    height: clamp(120px, 14vw, 200px);
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    border: 3px solid rgba(255,255,255,0.15);
+    box-shadow:
+      0 0 0 1px rgba(0,229,255,0.3),
+      0 20px 60px rgba(0,0,0,0.7),
+      0 0 30px rgba(255,45,155,0.2);
+    transition: box-shadow 0.4s ease, border-color 0.4s ease;
+    margin: 0 -12px;
+  }
+
+  .logo-item:hover img {
+    border-color: var(--cyan);
+    box-shadow:
+      0 0 0 2px var(--cyan),
+      0 30px 80px rgba(0,0,0,0.8),
+      0 0 60px rgba(0,229,255,0.4);
+  }
+
+  .logo-item .year-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.75);
+    color: var(--gold);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    padding: 2px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,208,0,0.4);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  .logo-item:hover .year-badge {
+    opacity: 1;
+  }
+
+  /* ===== BOTTOM STRIP ===== */
+  .bottom-bar {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    text-align: center;
+    padding: 0 20px 80px;
+    animation: fadeUp 1.4s 0.6s ease both;
+  }
+
+  .season-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(16px, 2.5vw, 26px);
+    letter-spacing: 6px;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+  }
+
+  .neon-line {
+    display: inline-block;
+    width: clamp(100px, 20vw, 200px);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    vertical-align: middle;
+    margin: 0 16px;
+    opacity: 0.6;
+  }
+
+  /* ===== SCROLLING TICKER ===== */
+  .ticker-wrap {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+    background: rgba(0,229,255,0.08);
+    border-top: 1px solid rgba(0,229,255,0.2);
+    overflow: hidden;
+    padding: 10px 0;
+  }
+  .ticker {
+    display: flex;
+    white-space: nowrap;
+    animation: ticker 20s linear infinite;
+  }
+  .ticker span {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: var(--cyan);
+    opacity: 0.6;
+    padding: 0 40px;
+  }
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+  <div class="bg-glow bg-glow-3"></div>
+
+  <div class="hero-title">
+    <div class="sub">Kausi 2026 · 8 osakilpailua</div>
+    <h1>Miesperhe<br>Pro Tour</h1>
+    <div class="tagline"><span class="neon-line"></span>2019–2026<span class="neon-line"></span></div>
+  </div>
+
+  <div class="collage-strip">
+    <div class="logo-item">
+      <img src="images/Miesperhe_2019.jpg" alt="Miesperhe 2019">
+      <div class="year-badge">2019</div>
+    </div>
+    <div class="logo-item">
+      <img src="images/Miesperhe_2020.png" alt="Miesperhe 2020">     
+      <div class="year-badge">2020</div>
+    </div>
+    <div class="logo-item">
+      <img src="images/Miesperhe_2021.png" alt="Miesperhe 2021">     
+      <div class="year-badge">2021</div>
+    </div>
+    <div class="logo-item">
+      <img src="images/Miesperhe_2022.png" alt="Miesperhe 2022">     
+      <div class="year-badge">2022</div>
+    </div>
+    <div class="logo-item">
+      <img src="images/Miesperhe_2023.png" alt="Miesperhe 2023">     
+      <div class="year-badge">2023</div>
+    </div><div class="logo-item">
+      <img src="images/Miesperhe_2024.png" alt="Miesperhe 2024">     
+      <div class="year-badge">2024</div>
+    </div>
+    <div class="logo-item">
+      <img src="images/Miesperhe_2025.png" alt="Miesperhe 2025">     
+      <div class="year-badge">2025</div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="season-text">
+      <span class="neon-line"></span>
+      
+      <span class="neon-line"></span>
+    </div>
+  </div>
+
+  <div class="ticker-wrap">
+    <div class="ticker">
+      <span>MIESPERHE PRO TOUR</span>
+      <span>·</span>
+      <span>2019 NUMMELA</span>
+      <span>·</span>
+      <span>2020 SYVÄ HÄME</span>
+      <span>·</span>
+      <span>2021 TUUSULA</span>
+      <span>·</span>
+      <span>2022 SYVÄ HÄME II</span>
+      <span>·</span>
+      <span>2023 TERVAKOSKI</span>
+      <span>·</span>
+      <span>2024 ROCK VALLEY</span>
+      <span>·</span>
+      <span>2025 ROCK VALLEY</span>
+      <span>·</span>
+      <span>MIESPERHE PRO TOUR</span>
+      <span>·</span>
+      <span>2019 NUMMELA</span>
+      <span>·</span>
+      <span>2020 SYVÄ HÄME</span>
+      <span>·</span>
+      <span>2021 TUUSULA</span>
+      <span>·</span>
+      <span>2022 SYVÄ HÄME II</span>
+      <span>·</span>
+      <span>2023 TERVAKOSKI</span>
+      <span>·</span>
+      <span>2024 ROCK VALLEY</span>
+      <span>·</span>
+      <span>2025 ROCK VALLEY</span>
+      <span>·</span>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
