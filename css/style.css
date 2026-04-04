@@ -335,7 +335,7 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   width: clamp(80px, 10vw, 160px);
   height: clamp(80px, 10vw, 160px);
   border-radius: 50%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
   border: 3px solid rgba(255,255,255,0.15);
   box-shadow: 0 0 0 1px rgba(0,229,255,0.3), 0 20px 60px rgba(0,0,0,0.7), 0 0 30px rgba(255,45,155,0.2);
