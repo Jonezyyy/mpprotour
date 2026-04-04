@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Miesperhe Pro Tour 2026. Kausitilanne, osakilpailutulokset ja pisteet." />
+  <title>Miesperhe Pro Tour 2026</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ===================== Navigation ===================== -->
+  <nav class="nav" id="main-nav">
+    <div class="container nav-inner">
+      <a class="nav-brand" href="#">
+        <span class="nav-disc" aria-hidden="true">◆</span>
+        MP Pro Tour
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle" aria-label="Avaa valikko" aria-expanded="false" aria-controls="nav-menu">
+        <span></span><span></span><span></span>
+      </button>
+
+      <ul class="nav-links" id="nav-menu" role="list">
+        <li><a href="#kausitilanne">Kausitilanne</a></li>
+        <li><a href="#seuraava">Seuraava</a></li>
+        <li><a href="#kilpailut">Osakilpailut</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ===================== Hero ========================== -->
+  <header class="hero">
+    <div class="hero-content container">
+      <span class="hero-label">Kausi 2026</span>
+      <h1 class="hero-title">
+        Miesperhe<br>
+        <span class="accent">Pro Tour</span>
+      </h1>
+      <p class="hero-subtitle" id="hero-subtitle">
+      2 / 8 osakilpailua pelattu
+      </p>
+      <div class="hero-actions">
+        <a href="#kausitilanne" class="btn btn-primary">Kausitilanne</a>
+        <a href="#kilpailut" class="btn btn-ghost">Osakilpailut</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== Kausitilanne ================== -->
+  <section class="section" id="kausitilanne">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Kausitilanne</h2>
+          <span class="season-badge" id="season-progress"></span>
+        <p class="section-sub">
+          
+        </p>
+      </div>
+      <!-- Taulukko rakennetaan app.js:ssä -->
+      <div id="standings-container"></div>
+    </div>
+  </section>
+
+  <!-- ===================== Seuraava kilpailu ============= -->
+  <section class="section" id="seuraava">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Seuraava kilpailu</h2>
+      </div>
+      <div id="next-event-container"></div>
+    </div>
+  </section>
+
+  <!-- ===================== Osakilpailut ================== -->
+  <section class="section section-alt" id="kilpailut">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Osakilpailut</h2>
+        <p class="section-sub">Kaikki kauden 2025 osakilpailut</p>
+      </div>
+      <!-- Kortit rakennetaan app.js:ssä -->
+      <div class="competitions-grid" id="competitions-container"></div>
+    </div>
+  </section>
+
+  <!-- ===================== Footer ======================== -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span class="footer-brand">Miesperhe Pro Tour 2025</span>
+      <span aria-hidden="true">&middot;</span>
+      <a
+        class="footer-link"
+        href="https://discgolfmetrix.com"
+        target="_blank"
+        rel="noopener noreferrer"
+      >Tulokset: Disc Golf Metrix</a>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
