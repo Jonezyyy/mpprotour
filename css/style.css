@@ -206,7 +206,7 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   position: relative;
   z-index: 10;
   text-align: center;
-  padding: 60px 20px 20px;
+  padding: 60px 20px 70px;
   animation: fadeDown 1s ease both;
 }
 
@@ -223,7 +223,7 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
 }
 
 @keyframes fadeDown {
-  from { opacity: 0; transform: translateY(-30px); }
+  from { opacity: 0; transform: translateY(-20px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
