@@ -375,6 +375,19 @@ function renderCompetitions() {
 
 // --- Renderöinti: Seuraava kilpailu ---
 
+function getPlayerRating(name) {
+  const md = metrixData[name];
+  if (md) {
+    const latestId = COMPETITIONS.slice().reverse().map(c => c.id).find(id => md[id]);
+    if (latestId && md[latestId].rating) return md[latestId].rating;
+  }
+  for (let i = COMPETITIONS.length - 1; i >= 0; i--) {
+    const res = COMPETITIONS[i].results.find(r => r.name === name);
+    if (res && res.rating) return res.rating;
+  }
+  return null;
+}
+
 function renderNextEvent() {
   const container = document.getElementById('next-event-container');
   if (!container || !NEXT_COMPETITION) return;
@@ -383,9 +396,15 @@ function renderNextEvent() {
     day: 'numeric', month: 'long', year: 'numeric'
   });
 
-  const playerList = NEXT_COMPETITION.registered.map((name, i) =>
-    `<li class="next-player"><span class="next-player-num">${i + 1}</span><button class="player-btn" data-player="${name}">${name}</button></li>`
-  ).join('');
+  const playerList = NEXT_COMPETITION.registered.map((name, i) => {
+    const rating = getPlayerRating(name);
+    const crv = NEXT_COMPETITION.courseRatingValue;
+    const mullit = (rating && crv) ? Math.max(0, Math.round((1000 - rating) / crv / 6)) : null;
+    const mullitHtml = mullit !== null
+      ? `<span class="next-player-mullit" title="Rating ${rating}">${mullit > 0 ? mullit + ' mulli' + (mullit === 1 ? '' : 'a') : '—'}</span>`
+      : '';
+    return `<li class="next-player"><span class="next-player-num">${i + 1}</span><button class="player-btn" data-player="${name}">${name}</button>${mullitHtml}</li>`;
+  }).join('');
 
   container.innerHTML = `
     <div class="next-card">
@@ -450,6 +469,7 @@ async function fetchMetrixData() {
       })
       .catch(() => {})
   ));
+  renderNextEvent();
 }
 
 // --- Pelaajan profiili ---

@@ -687,6 +687,19 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   line-height: 1;
 }
 
+.next-player-mullit {
+  margin-left: auto;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--accent);
+  background: rgba(255, 208, 0, 0.1);
+  border: 1px solid rgba(255, 208, 0, 0.3);
+  border-radius: 4px;
+  padding: 0.1rem 0.5rem;
+  white-space: nowrap;
+}
+
 .next-actions {
   display: flex;
   gap: 0.75rem;
