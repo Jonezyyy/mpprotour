@@ -400,10 +400,11 @@ function renderNextEvent() {
     const rating = getPlayerRating(name);
     const crv = NEXT_COMPETITION.courseRatingValue;
     const mullit = (rating && crv) ? Math.max(0, Math.round((1000 - rating) / crv / 6)) : null;
+    const ratingHtml = rating ? `<span class="next-player-rating">${rating}</span>` : '';
     const mullitHtml = mullit !== null
       ? `<span class="next-player-mullit" title="Rating ${rating}">${mullit > 0 ? mullit + ' mulli' + (mullit === 1 ? '' : 'a') : '—'}</span>`
       : '';
-    return `<li class="next-player"><span class="next-player-num">${i + 1}</span><button class="player-btn" data-player="${name}">${name}</button>${mullitHtml}</li>`;
+    return `<li class="next-player"><span class="next-player-num">${i + 1}</span><button class="player-btn" data-player="${name}">${name}</button>${ratingHtml}${mullitHtml}</li>`;
   }).join('');
 
   container.innerHTML = `
