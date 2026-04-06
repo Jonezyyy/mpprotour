@@ -293,7 +293,13 @@ function renderStandings2025() {
 // --- Renderöinti: Osakilpailut ---
 
 function buildResultsTable(comp) {
-  const roundedResults = calcRoundedResults(comp);
+  const roundedResults = calcRoundedResults(comp)
+    .sort((a, b) => {
+      if (a.hcScore === null && b.hcScore === null) return 0;
+      if (a.hcScore === null) return 1;
+      if (b.hcScore === null) return -1;
+      return a.hcScore - b.hcScore;
+    });
   const rows = roundedResults.map(res => {
     const pts = calcEventPoints(res.place, roundedResults);
     const hcDisplay = formatHC(res.hcScore);
