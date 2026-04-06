@@ -53,6 +53,22 @@ function formatDate(dateStr) {
   });
 }
 
+// --- Sijoituslaskenta pyöristetyillä HC-tuloksilla ---
+
+/**
+ * Palauttaa kilpailun tulokset pyöristetyillä sijoituksilla.
+ * hcScore pyöristetään kokonaisluvuksi ennen sijoitusten laskentaa,
+ * joten x.xx ja x.yy voivat päätyä samalle sijalle.
+ */
+function calcRoundedResults(comp) {
+  return comp.results.map(res => {
+    if (res.hcScore === null) return { ...res, place: null };
+    const rounded = Math.round(res.hcScore);
+    const place = comp.results.filter(r => r.hcScore !== null && Math.round(r.hcScore) < rounded).length + 1;
+    return { ...res, place };
+  });
+}
+
 // --- Kausitilanne ---
 
 /**
@@ -64,12 +80,7 @@ function buildStandings(comps = COMPETITIONS) {
   const players = {};
 
   comps.forEach(comp => {
-    // Derive HC-based place at runtime (lower hcScore = better, null = DNF)
-    const resultsForCalc = comp.results.map(res => {
-      if (res.hcScore === null) return { ...res, place: null };
-      const hcPlace = comp.results.filter(r => r.hcScore !== null && r.hcScore < res.hcScore).length + 1;
-      return { ...res, place: hcPlace };
-    });
+    const resultsForCalc = calcRoundedResults(comp);
 
     resultsForCalc.forEach(res => {
       if (!players[res.name]) {
@@ -282,8 +293,9 @@ function renderStandings2025() {
 // --- Renderöinti: Osakilpailut ---
 
 function buildResultsTable(comp) {
-  const rows = comp.results.map(res => {
-    const pts = calcEventPoints(res.place, comp.results);
+  const roundedResults = calcRoundedResults(comp);
+  const rows = roundedResults.map(res => {
+    const pts = calcEventPoints(res.place, roundedResults);
     const hcDisplay = formatHC(res.hcScore);
     const hcClass = res.hcScore === null ? 'diff-dnf' : '';
     const rawDisplay = res.throws !== null ? res.throws : '–';
@@ -477,8 +489,9 @@ async function fetchMetrixData() {
 
 function buildPlayerProfile(playerName) {
   const results = COMPETITIONS.map(comp => {
-    const res = comp.results.find(r => r.name === playerName);
-    const pts = res ? calcEventPoints(res.place, comp.results) : null;
+    const roundedResults = calcRoundedResults(comp);
+    const res = roundedResults.find(r => r.name === playerName);
+    const pts = res ? calcEventPoints(res.place, roundedResults) : null;
     const api = (metrixData[playerName] || {})[comp.id] || null;
     return {
       compName: comp.name,
