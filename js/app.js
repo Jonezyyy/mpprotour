@@ -674,13 +674,32 @@ function initNav() {
 
 // --- Käynnistys ---
 
-document.addEventListener('DOMContentLoaded', () => {
+async function fetchRegisteredPlayers(id) {
+  try {
+    const res = await fetch(`${RAILWAY_API_URL}/api/competition/${id}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return Array.isArray(data.registered) && data.registered.length > 0 ? data.registered : null;
+  } catch (err) {
+    console.warn('Backend ei tavoitettavissa, käytetään staattista listaa:', err.message);
+    return null;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
   initModal();
   renderHeroStats();
   renderStandings();
   renderStandings2025();
-  renderNextEvent();
   renderCompetitions();
   initNav();
   fetchMetrixData();
+
+  if (NEXT_COMPETITION) {
+    const live = await fetchRegisteredPlayers(NEXT_COMPETITION.id);
+    if (live) {
+      NEXT_COMPETITION.registered = live;
+    }
+  }
+  renderNextEvent();
 });

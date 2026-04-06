@@ -1,6 +1,7 @@
 'use strict';
 
 const TOTAL_EVENTS = 8;
+const RAILWAY_API_URL = 'https://mpprotour-production.up.railway.app';
 
 // Pisteytystaulukko (sijoitus 1–15)
 const POINTS_TABLE = [
