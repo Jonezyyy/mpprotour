@@ -39,7 +39,7 @@ function formatHC(hcScore) {
  */
 function fmtPts(val) {
   if (typeof val !== 'number') return '–';
-  return Number.isInteger(val) ? String(val) : val.toFixed(2);
+  return String(Math.round(val));
 }
 
 /**
