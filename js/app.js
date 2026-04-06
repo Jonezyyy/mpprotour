@@ -18,7 +18,7 @@ function calcEventPoints(place, allResults) {
   for (let i = place - 1; i < place - 1 + tiedCount; i++) {
     sum += POINTS_TABLE[i] ?? 0;
   }
-  return sum / tiedCount;
+  return Math.round(sum / tiedCount);
 }
 
 /**
