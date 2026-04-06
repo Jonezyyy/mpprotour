@@ -674,6 +674,31 @@ function initNav() {
 
 // --- Käynnistys ---
 
+async function fetchAllCompetitionResults() {
+  await Promise.all(COMPETITIONS.map(async comp => {
+    try {
+      const res = await fetch(`${RAILWAY_API_URL}/api/competition/${comp.id}/results`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.completed || !Array.isArray(data.players) || data.players.length === 0) return;
+
+      const crv = comp.courseRatingValue;
+      if (!crv) return;
+
+      comp.results = data.players.map(p => {
+        if (p.dnf || p.throws === null || p.rating === null) {
+          return { name: p.name, rating: p.rating, throws: null, hc: null, hcScore: null };
+        }
+        const hc = (1000 - p.rating) / crv;
+        const hcScore = p.throws - hc;
+        return { name: p.name, rating: p.rating, throws: p.throws, hc, hcScore };
+      });
+    } catch (e) {
+      // Pidetään data.js:n varmuuskopio
+    }
+  }));
+}
+
 async function fetchRegisteredPlayers(id) {
   try {
     const res = await fetch(`${RAILWAY_API_URL}/api/competition/${id}`);
@@ -688,12 +713,16 @@ async function fetchRegisteredPlayers(id) {
 
 document.addEventListener('DOMContentLoaded', async () => {
   initModal();
+  initNav();
+
+  // Hae tuoreet kisatulokset backendistä ennen renderöintiä
+  await fetchAllCompetitionResults();
+
   renderHeroStats();
   renderStandings();
   renderStandings2025();
   renderCompetitions();
-  initNav();
-  fetchMetrixData();
+  fetchMetrixData(); // async: päivittää ratingit ja kutsuu renderNextEvent()
 
   if (NEXT_COMPETITION) {
     const live = await fetchRegisteredPlayers(NEXT_COMPETITION.id);
