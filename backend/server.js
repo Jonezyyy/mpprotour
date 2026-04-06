@@ -5,22 +5,7 @@ const fetch = require('node-fetch');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Allow GitHub Pages + local development
-const allowedOrigins = [
-  'https://jonezyyy.github.io',
-  /^http:\/\/localhost(:\d+)?$/,
-  /^http:\/\/127\.0\.0\.1(:\d+)?$/
-];
-
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // allow non-browser requests
-    const allowed = allowedOrigins.some(o =>
-      typeof o === 'string' ? o === origin : o.test(origin)
-    );
-    callback(allowed ? null : new Error('Not allowed by CORS'), allowed);
-  }
-}));
+app.use(cors());
 
 // In-memory cache: { [id]: { data, expiresAt } }
 const cache = {};
