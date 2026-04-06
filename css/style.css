@@ -577,6 +577,9 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   .standings-table td,
   .standings-table thead th { padding: 0.65rem 0.5rem; }
   .rank-cell { width: 48px; }
+
+  .results-table th.rating-col,
+  .results-table td.rating-cell { display: none; }
 }
 
 /* Season progress badge */

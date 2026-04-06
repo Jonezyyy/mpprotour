@@ -324,7 +324,7 @@ function buildResultsTable(comp) {
           <tr>
             <th>#</th>
             <th>Pelaaja</th>
-            <th title="Metrix-rating">Rating</th>
+            <th class="rating-col" title="Metrix-rating">Rating</th>
             <th>Heittoa</th>
             <th title="Tasoitettu tulos (HC)">HC tulos</th>
             <th>Pisteet</th>
