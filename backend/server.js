@@ -78,7 +78,16 @@ app.get('/api/competition/:id/results', async (req, res) => {
       if (e.Name) ratingMap[e.Name] = parseInt(e.Rating, 10) || null;
     });
 
-    const completed = Object.keys(ratingMap).length > 0;
+    const weeklyHC = comp.WeeklyHC || [];
+    const completed = weeklyHC.length > 0;
+
+    // Calculate CRV as average of (1000 - Rating) / HC across all valid entries
+    const crvValues = weeklyHC
+      .filter(e => e.Rating && e.HC && parseFloat(e.HC) > 0)
+      .map(e => (1000 - parseFloat(e.Rating)) / parseFloat(e.HC));
+    const crv = crvValues.length > 0
+      ? crvValues.reduce((a, b) => a + b, 0) / crvValues.length
+      : null;
 
     const players = (comp.Results || [])
       .filter(r => r.Name)
@@ -94,7 +103,7 @@ app.get('/api/competition/:id/results', async (req, res) => {
         };
       });
 
-    const data = { completed, players };
+    const data = { completed, crv, players };
     cache[cacheKey] = { data, expiresAt: now + CACHE_TTL_MS };
     return res.json(data);
   } catch (err) {

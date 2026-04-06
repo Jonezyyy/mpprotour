@@ -52,7 +52,6 @@ const COMPETITIONS = [
     location: 'Sipoo, Uusimaa',
     par: 59,
     holes: 18,
-    courseRatingValue: 11.10,
     url: 'https://discgolfmetrix.com/3447716',
     results: [
       { place: 1,  name: 'Saku',               rating: 718, throws: 66, hc: 25.41, hcScore: 40.59 },
@@ -80,7 +79,6 @@ const COMPETITIONS = [
     location: 'Vihti, Uusimaa',
     par: 57,
     holes: 18,
-    courseRatingValue: 12.00,
     url: 'https://discgolfmetrix.com/3480511',
     results: [
       { place: 1,    name: 'Tomi S',             rating: 753, throws: 67, hc: 20.58, hcScore: 46.42 },

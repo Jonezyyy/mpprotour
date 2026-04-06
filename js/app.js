@@ -682,7 +682,7 @@ async function fetchAllCompetitionResults() {
       const data = await res.json();
       if (!data.completed || !Array.isArray(data.players) || data.players.length === 0) return;
 
-      const crv = comp.courseRatingValue;
+      const crv = data.crv;
       if (!crv) return;
 
       comp.results = data.players.map(p => {
