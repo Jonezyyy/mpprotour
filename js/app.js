@@ -95,7 +95,7 @@ function buildStandings(comps = COMPETITIONS) {
       const eventPts = Object.values(p.events).filter(v => typeof v === 'number');
       return {
         ...p,
-        total: eventPts.reduce((a, b) => a + b, 0),
+        total: Math.round(eventPts.reduce((a, b) => a + b, 0)),
         eventsPlayed: eventPts.length
       };
     })
@@ -505,7 +505,7 @@ function buildPlayerProfile(playerName) {
   });
 
   const played     = results.filter(r => r.pts !== null);
-  const totalPts   = played.reduce((a, b) => a + b.pts, 0);
+  const totalPts   = Math.round(played.reduce((a, b) => a + b.pts, 0));
   const avgPts     = played.length ? totalPts / played.length : 0;
   const placements = played.map(r => r.place).filter(p => p !== null);
   const bestPlace  = placements.length ? Math.min(...placements) : null;
