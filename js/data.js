@@ -21,6 +21,7 @@ const NEXT_COMPETITION = {
   url: 'https://discgolfmetrix.com/3560637',
   registerUrl: 'https://discgolfmetrix.com/?u=register_add&ID=3560637',
   registered: [
+    'Markus Kotiranta',
     'Erno Ekebom',
     'Viljami Julkunen',
     'Joonas Korpilaakso',
