@@ -8,31 +8,6 @@ const POINTS_TABLE = [
   100, 90, 82, 74, 67, 60, 54, 48, 42, 36, 30, 24, 18, 12, 6
 ];
 
-// Seuraava osakilpailu
-const NEXT_COMPETITION = {
-  id: 3560637,
-  name: 'Meilahti',
-  fullName: 'MP Pro Tour 2026 – Meilahti',
-  course: 'Meilahti → 16',
-  location: 'Helsinki, Uusimaa',
-  par: 48,
-  holes: 16,
-  courseRatingValue: 13.49,
-  registrationEnd: '2026-04-30',
-  url: 'https://discgolfmetrix.com/3560637',
-  registerUrl: 'https://discgolfmetrix.com/?u=register_add&ID=3560637',
-  registered: [
-    'Markus Kotiranta',
-    'Erno Ekebom',
-    'Viljami Julkunen',
-    'Joonas Korpilaakso',
-    'Tomi S',
-    'Petri Haukka',
-    'Antti Karjakin',
-    'Jukka Vesa'
-  ]
-};
-
 // Ajantasaiset Metrix-ratingit pelaajittain (päivitetään manuaalisesti)
 const PLAYER_RATINGS = {
   'Jukka Vesa':         933,
@@ -52,17 +27,41 @@ const PLAYER_RATINGS = {
   'Wili Vuorinen':      637,
 };
 
-// Osakilpailut — lisää uusi kilpailu tähän listaan kauden edetessä.
-// Jokainen result:
-//   place    — HC-sijoitus (null = DNF)
-//   name     — pelaajan nimi
-//   rating   — Metrix-rating
-//   throws   — raakaheittomäärä (null = DNF)
-//   hc       — tasoitus (HC)
-//   hcScore  — tasoitettu tulos throws − hc (null = DNF)
-// Sijoitukset laskettu Metrix HC-tulosnäkymästä (pienin hcScore = 1.)
+// Kilpailut — state: 'over' | 'active' | 'next'
+// active = käynnissä tällä hetkellä (voi olla useita viikkoja auki)
+// over   = päättynyt, lasketaan kausipisteisiin
+// next   = tulossa (id tai courseRatingValue voi puuttua)
 const COMPETITIONS = [
+  // ── Käynnissä ──────────────────────────────────────────────────────────
   {
+    state: 'active',
+    id: 3560637,
+    name: 'Meilahti',
+    fullName: 'MP Pro Tour 2026 – Meilahti',
+    date: '2026-04-30',
+    course: 'Meilahti → 16',
+    location: 'Helsinki, Uusimaa',
+    par: 48,
+    holes: 16,
+    courseRatingValue: 13.49,
+    registrationEnd: '2026-04-30',
+    url: 'https://discgolfmetrix.com/3560637',
+    registerUrl: 'https://discgolfmetrix.com/?u=register_add&ID=3560637',
+    registered: [
+      'Markus Kotiranta',
+      'Erno Ekebom',
+      'Viljami Julkunen',
+      'Joonas Korpilaakso',
+      'Tomi S',
+      'Petri Haukka',
+      'Antti Karjakin',
+      'Jukka Vesa'
+    ]
+  },
+
+  // ── Päättyneet ─────────────────────────────────────────────────────────
+  {
+    state: 'over',
     id: 3447716,
     name: 'Talma',
     fullName: 'MP Pro Tour 2025 – Talma',
@@ -90,6 +89,7 @@ const COMPETITIONS = [
     ]
   },
   {
+    state: 'over',
     id: 3480511,
     name: 'Nummelanharju',
     fullName: 'MP Pro Tour 2025 – Nummelanharju',

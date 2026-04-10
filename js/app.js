@@ -1,5 +1,10 @@
 'use strict';
 
+// --- Kilpailunäkymät ---
+const overComps  = COMPETITIONS.filter(c => c.state === 'over');
+const activeComp = COMPETITIONS.find(c => c.state === 'active') ?? null;
+const nextComp   = COMPETITIONS.find(c => c.state === 'next')   ?? null;
+
 // --- Pisteytysfunktiot ---
 
 /**
@@ -76,7 +81,7 @@ function calcRoundedResults(comp) {
  * DNF tai ei-osallistunut = null (ei lasketa mukaan kokonaispisteisiin).
  * @returns {Array} Lajiteltu pelaajataulukko
  */
-function buildStandings(comps = COMPETITIONS) {
+function buildStandings(comps = overComps) {
   const players = {};
 
   comps.forEach(comp => {
@@ -106,17 +111,17 @@ function buildStandings(comps = COMPETITIONS) {
 
 function renderHeroStats() {
   const container = document.getElementById('hero-stats');
-  if (!container || COMPETITIONS.length === 0) return;
+  if (!container || overComps.length === 0) return;
 
   const standings = buildStandings();
   const leader = standings[0];
 
-  const lastComp = COMPETITIONS[COMPETITIONS.length - 1];
+  const lastComp = overComps[overComps.length - 1];
   const lastWinner = lastComp.results.find(r => r.place === 1);
 
   // Best HC score ever across all events
   let bestHCScore = Infinity, bestHCPlayer = null, bestHCComp = null;
-  COMPETITIONS.forEach(comp => {
+  overComps.forEach(comp => {
     comp.results.forEach(r => {
       if (r.hcScore !== null && r.hcScore < bestHCScore) {
         bestHCScore = r.hcScore;
@@ -127,7 +132,7 @@ function renderHeroStats() {
   });
 
   const totalPlayers = standings.length;
-  const progress = `${COMPETITIONS.length} / ${TOTAL_EVENTS}`;
+  const progress = `${overComps.length} / ${TOTAL_EVENTS}`;
 
   const cards = [
     {
@@ -183,7 +188,7 @@ function renderStandings() {
   const container = document.getElementById('standings-container');
   if (!container) return;
   // Otsikkorivi kilpailujen mukaan
-  const compHeaders = COMPETITIONS.map(c =>
+  const compHeaders = overComps.map(c =>
     `<th class="pts-col">${c.name}</th>`
   ).join('');
 
@@ -191,12 +196,12 @@ function renderStandings() {
 
   // Trend: compare against standings before the last event
   const prevRankOf = {};
-  if (COMPETITIONS.length > 1) {
-    buildStandings(COMPETITIONS.slice(0, -1)).forEach((p, idx) => {
+  if (overComps.length > 1) {
+    buildStandings(overComps.slice(0, -1)).forEach((p, idx) => {
       prevRankOf[p.name] = idx + 1;
     });
   }
-  const showTrend = COMPETITIONS.length > 1;
+  const showTrend = overComps.length > 1;
 
   const rows = standings.map((player, idx) => {
     const rank = idx + 1;
@@ -214,7 +219,7 @@ function renderStandings() {
       }
     }
 
-    const eventCells = COMPETITIONS.map(comp => {
+    const eventCells = overComps.map(comp => {
       const pts = player.events[comp.id];
       return `<td class="pts-cell">${fmtPts(pts)}</td>`;
     }).join('');
@@ -245,11 +250,11 @@ function renderStandings() {
 
   // Update season progress badge
   const badge = document.getElementById('season-progress');
-  if (badge) badge.textContent = `${COMPETITIONS.length} / ${TOTAL_EVENTS}`;
+  if (badge) badge.textContent = `${overComps.length} / ${TOTAL_EVENTS}`;
 
   // Update hero subtitle
   const sub = document.getElementById('hero-subtitle');
-  if (sub) sub.textContent = `${COMPETITIONS.length} / ${TOTAL_EVENTS} osakilpailua pelattu`;
+  if (sub) sub.textContent = `${overComps.length} / ${TOTAL_EVENTS} osakilpailua pelattu`;
 
   container.querySelectorAll('.player-btn').forEach(btn => {
     btn.addEventListener('click', () => openPlayerModal(btn.dataset.player));
@@ -338,7 +343,7 @@ function buildResultsTable(comp) {
 function renderCompetitions() {
   const container = document.getElementById('competitions-container');
   if (!container) return;
-  const cards = COMPETITIONS.map((comp, i) => {
+  const cards = overComps.map((comp, i) => {
     const winner = comp.results[0];
     const winnerHC = winner.hcScore !== null ? winner.hcScore.toFixed(2) : 'DNF';
     const date = formatDate(comp.date);
@@ -391,63 +396,122 @@ function renderCompetitions() {
   });
 }
 
-// --- Renderöinti: Seuraava kilpailu ---
+// --- Renderöinti: Nykyinen kilpailu ---
 
 function getPlayerRating(name) {
   if (PLAYER_RATINGS && PLAYER_RATINGS[name]) return PLAYER_RATINGS[name];
   const md = metrixData[name];
   if (md) {
-    const latestId = COMPETITIONS.slice().reverse().map(c => c.id).find(id => md[id]);
+    const latestId = overComps.slice().reverse().map(c => c.id).find(id => md[id]);
     if (latestId && md[latestId].rating) return md[latestId].rating;
   }
-  for (let i = COMPETITIONS.length - 1; i >= 0; i--) {
-    const res = COMPETITIONS[i].results.find(r => r.name === name);
+  for (let i = overComps.length - 1; i >= 0; i--) {
+    const res = overComps[i].results.find(r => r.name === name);
     if (res && res.rating) return res.rating;
   }
   return null;
 }
 
-function renderNextEvent() {
-  const container = document.getElementById('next-event-container');
-  if (!container || !NEXT_COMPETITION) return;
+const activeCompLiveResults = {};
 
-  const regEnd = new Date(NEXT_COMPETITION.registrationEnd).toLocaleDateString('fi-FI', {
-    day: 'numeric', month: 'long', year: 'numeric'
+async function fetchActiveCompLiveResults() {
+  if (!activeComp || !activeComp.id) return;
+  try {
+    const res = await fetch(`https://discgolfmetrix.com/api.php?content=result&id=${activeComp.id}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.Competition) return;
+    (data.Competition.Results || []).forEach(r => {
+      const throws = parseInt(r.Sum, 10);
+      if (r.DNF) {
+        activeCompLiveResults[r.Name] = { throws: null, dnf: true };
+      } else if (throws > 0) {
+        activeCompLiveResults[r.Name] = { throws, dnf: false };
+      }
+    });
+  } catch (e) {}
+  renderCurrentComp();
+}
+
+function renderCurrentComp() {
+  const container = document.getElementById('next-event-container');
+  if (!container) return;
+
+  const comp = activeComp || nextComp;
+  if (!comp) return;
+
+  const crv = comp.courseRatingValue;
+  const isActive = comp.state === 'active';
+  const regEnd = comp.registrationEnd
+    ? new Date(comp.registrationEnd).toLocaleDateString('fi-FI', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
+
+  const players = comp.registered.map(name => {
+    const rating = getPlayerRating(name);
+    const live = isActive ? activeCompLiveResults[name] : null;
+    const played = !!live;
+    const dnf = live ? live.dnf : false;
+    const throws = (live && !live.dnf) ? live.throws : null;
+    const hcScore = (played && !dnf && throws !== null && rating && crv)
+      ? throws - (1000 - rating) / crv
+      : null;
+    // Mullit shown when player hasn't played yet (both active and next states)
+    const mullit = (!played && rating && crv)
+      ? Math.max(0, Math.ceil((1000 - rating) / crv / 6))
+      : null;
+    return { name, rating, throws, dnf, played, hcScore, mullit };
   });
 
-  const playerList = NEXT_COMPETITION.registered.map((name, i) => {
-    const rating = getPlayerRating(name);
-    const crv = NEXT_COMPETITION.courseRatingValue;
-    const mullit = (rating && crv) ? Math.max(0, Math.ceil((1000 - rating) / crv / 6)) : null;
-    const ratingHtml = rating ? `<span class="next-player-rating">Rating ${rating}</span>` : '';
-    const mullitHtml = mullit !== null
-      ? `<span class="next-player-mullit" title="Rating ${rating}">${mullit > 0 ? mullit + ' mulli' + (mullit === 1 ? '' : 'a') : '—'}</span>`
-      : '';
-    return `<li class="next-player"><span class="next-player-num">${i + 1}</span><button class="player-btn" data-player="${name}">${name}</button>${ratingHtml}${mullitHtml}</li>`;
+  if (isActive) {
+    players.sort((a, b) => {
+      if (a.played !== b.played) return a.played ? -1 : 1;
+      if (!a.played) return 0;
+      if (a.dnf !== b.dnf) return a.dnf ? 1 : -1;
+      return a.hcScore - b.hcScore;
+    });
+  }
+
+  const badge = isActive ? 'Käynnissä 🔴' : 'Seuraava osakilpailu';
+
+  const playerList = players.map((p, i) => {
+    const ratingHtml = p.rating ? `<span class="next-player-rating">Rating ${p.rating}</span>` : '';
+    let resultHtml = '';
+    if (p.played) {
+      resultHtml = p.dnf
+        ? `<span class="next-player-mullit diff-dnf">DNF</span>`
+        : `<span class="next-player-mullit">HC ${p.hcScore.toFixed(2)}</span>`;
+    } else if (p.mullit !== null) {
+      resultHtml = `<span class="next-player-mullit" title="Rating ${p.rating}">${p.mullit > 0 ? p.mullit + ' mulli' + (p.mullit === 1 ? '' : 'a') : '—'}</span>`;
+    }
+    return `<li class="next-player"><span class="next-player-num">${i + 1}</span><button class="player-btn" data-player="${p.name}">${p.name}</button>${ratingHtml}${resultHtml}</li>`;
   }).join('');
+
+  const metrixBtn   = comp.id         ? `<a class="btn btn-ghost" href="${comp.url}" target="_blank" rel="noopener noreferrer">Metrix →</a>` : '';
+  const registerBtn = comp.registerUrl ? `<a class="btn btn-primary" href="${comp.registerUrl}" target="_blank" rel="noopener noreferrer">Rekisteröidy</a>` : '';
+  const regEndHtml  = regEnd           ? `<span>Ilmoittautuminen auki: ${regEnd} asti</span>` : '';
 
   container.innerHTML = `
     <div class="next-card">
       <div class="next-card-header">
-        <span class="comp-badge">Seuraava osakilpailu</span>
-        <h3 class="comp-name">${NEXT_COMPETITION.name}</h3>
+        <span class="comp-badge">${badge}</span>
+        <h3 class="comp-name">${comp.name}</h3>
         <div class="comp-meta">
-          <span>📍 ${NEXT_COMPETITION.location}</span>
-          <span>🏁 ${NEXT_COMPETITION.holes} reikää &nbsp;·&nbsp; Par ${NEXT_COMPETITION.par}</span>
+          <span>📍 ${comp.location}</span>
+          <span>🏁 ${comp.holes} reikää &nbsp;·&nbsp; Par ${comp.par}</span>
         </div>
         <div class="comp-info">
-          <span>${NEXT_COMPETITION.course}</span>
-          <span>Ilmoittautuminen auki: ${regEnd} asti</span>
+          <span>${comp.course}</span>
+          ${regEndHtml}
         </div>
       </div>
       <div class="next-card-body">
         <div class="next-registered">
-          <p class="next-registered-title">Ilmoittautuneet <span class="next-count">${NEXT_COMPETITION.registered.length}</span></p>
+          <p class="next-registered-title">Ilmoittautuneet <span class="next-count">${comp.registered.length}</span></p>
           <ul class="next-player-list">${playerList}</ul>
         </div>
         <div class="next-actions">
-          <a class="btn btn-primary" href="${NEXT_COMPETITION.registerUrl}" target="_blank" rel="noopener noreferrer">Rekisteröidy</a>
-          <a class="btn btn-ghost" href="${NEXT_COMPETITION.url}" target="_blank" rel="noopener noreferrer">Metrix →</a>
+          ${registerBtn}
+          ${metrixBtn}
         </div>
       </div>
     </div>`;
@@ -462,7 +526,7 @@ function renderNextEvent() {
 const metrixData = {};
 
 async function fetchMetrixData() {
-  await Promise.all(COMPETITIONS.map(comp =>
+  await Promise.all(overComps.map(comp =>
     fetch(`https://discgolfmetrix.com/api.php?content=result&id=${comp.id}`)
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(data => {
@@ -489,13 +553,13 @@ async function fetchMetrixData() {
       })
       .catch(() => {})
   ));
-  renderNextEvent();
+  renderCurrentComp();
 }
 
 // --- Pelaajan profiili ---
 
 function buildPlayerProfile(playerName) {
-  const results = COMPETITIONS.map(comp => {
+  const results = overComps.map(comp => {
     const roundedResults = calcRoundedResults(comp);
     const res = roundedResults.find(r => r.name === playerName);
     const pts = res ? calcEventPoints(res.place, roundedResults) : null;
@@ -682,7 +746,7 @@ function initNav() {
 // --- Käynnistys ---
 
 async function fetchAllCompetitionResults() {
-  await Promise.all(COMPETITIONS.map(async comp => {
+  await Promise.all(overComps.map(async comp => {
     try {
       const res = await fetch(`${RAILWAY_API_URL}/api/competition/${comp.id}/results`);
       if (!res.ok) return;
@@ -729,13 +793,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderStandings();
   renderStandings2025();
   renderCompetitions();
-  fetchMetrixData(); // async: päivittää ratingit ja kutsuu renderNextEvent()
+  fetchMetrixData(); // async: päivittää ratingit, kutsuu renderCurrentComp()
 
-  if (NEXT_COMPETITION) {
-    const live = await fetchRegisteredPlayers(NEXT_COMPETITION.id);
-    if (live) {
-      NEXT_COMPETITION.registered = live;
-    }
+  // Renderöi nykyinen kilpailu heti staattisilla tiedoilla
+  renderCurrentComp();
+
+  // Hae ilmoittautuneet ja live-tulokset
+  const currentComp = activeComp || nextComp;
+  if (currentComp && currentComp.id) {
+    const live = await fetchRegisteredPlayers(currentComp.id);
+    if (live) currentComp.registered = live;
+    renderCurrentComp();
+    if (activeComp) fetchActiveCompLiveResults();
   }
-  renderNextEvent();
 });
