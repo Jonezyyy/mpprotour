@@ -394,6 +394,7 @@ function renderCompetitions() {
 // --- Renderöinti: Seuraava kilpailu ---
 
 function getPlayerRating(name) {
+  if (PLAYER_RATINGS && PLAYER_RATINGS[name]) return PLAYER_RATINGS[name];
   const md = metrixData[name];
   if (md) {
     const latestId = COMPETITIONS.slice().reverse().map(c => c.id).find(id => md[id]);
@@ -417,7 +418,7 @@ function renderNextEvent() {
   const playerList = NEXT_COMPETITION.registered.map((name, i) => {
     const rating = getPlayerRating(name);
     const crv = NEXT_COMPETITION.courseRatingValue;
-    const mullit = (rating && crv) ? Math.max(0, Math.round((1000 - rating) / crv / 6)) : null;
+    const mullit = (rating && crv) ? Math.max(0, Math.ceil((1000 - rating) / crv / 6)) : null;
     const ratingHtml = rating ? `<span class="next-player-rating">Rating ${rating}</span>` : '';
     const mullitHtml = mullit !== null
       ? `<span class="next-player-mullit" title="Rating ${rating}">${mullit > 0 ? mullit + ' mulli' + (mullit === 1 ? '' : 'a') : '—'}</span>`
