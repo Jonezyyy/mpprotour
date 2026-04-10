@@ -33,6 +33,25 @@ const NEXT_COMPETITION = {
   ]
 };
 
+// Ajantasaiset Metrix-ratingit pelaajittain (päivitetään manuaalisesti)
+const PLAYER_RATINGS = {
+  'Jukka Vesa':         933,
+  'Antti Karjakin':     898,
+  'Otto Syvähuoko':     843,
+  'Erno Ekebom':        841,
+  'Joonas Korpilaakso': 810,
+  'Markus Kotiranta':   789,
+  'JB Poupon':          776,
+  'Saku':               770,
+  'Tomi S':             758,
+  'Petri Haukka':       736,
+  'Tuomas Kotiranta':   721,
+  'Viljami Julkunen':   720,
+  'Kari Tauriainen':    678,
+  'Petteri Stedt':      653,
+  'Wili Vuorinen':      637,
+};
+
 // Osakilpailut — lisää uusi kilpailu tähän listaan kauden edetessä.
 // Jokainen result:
 //   place    — HC-sijoitus (null = DNF)
