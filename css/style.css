@@ -707,6 +707,13 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   white-space: nowrap;
 }
 
+.score-diff {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-left: 6px;
+  color: #51cf66;
+}
+
 .next-actions {
   display: flex;
   gap: 0.75rem;

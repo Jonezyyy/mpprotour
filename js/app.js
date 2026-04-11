@@ -33,7 +33,7 @@ function calcEventPoints(place, allResults) {
  */
 function formatHC(hcScore) {
   if (hcScore === null) return 'DNF';
-  return hcScore.toFixed(2);
+  return Math.round(hcScore);
 }
 
 /**
@@ -146,14 +146,14 @@ function renderHeroStats() {
       label: `Voitti — ${lastComp.name}`,
       icon: '🏆',
       value: lastWinner ? lastWinner.name : '–',
-      sub: lastWinner ? `HC ${lastWinner.hcScore.toFixed(2)}` : '',
+      sub: lastWinner ? `HC ${Math.round(lastWinner.hcScore)}` : '',
       playerName: lastWinner ? lastWinner.name : null,
     },
     {
       label: 'Kauden paras HC',
       icon: '🎯',
       value: bestHCPlayer || '–',
-      sub: bestHCPlayer ? `${bestHCScore.toFixed(2)} · ${bestHCComp}` : '',
+      sub: bestHCPlayer ? `${Math.round(bestHCScore)} · ${bestHCComp}` : '',
       playerName: bestHCPlayer,
     },
     {
@@ -345,7 +345,7 @@ function renderCompetitions() {
   if (!container) return;
   const cards = overComps.map((comp, i) => {
     const winner = comp.results[0];
-    const winnerHC = winner.hcScore !== null ? winner.hcScore.toFixed(2) : 'DNF';
+    const winnerHC = winner.hcScore !== null ? Math.round(winner.hcScore) : 'DNF';
     const date = formatDate(comp.date);
 
     return `
@@ -477,9 +477,14 @@ function renderCurrentComp() {
     const ratingHtml = p.rating ? `<span class="next-player-rating">Rating ${p.rating}</span>` : '';
     let resultHtml = '';
     if (p.played) {
-      resultHtml = p.dnf
-        ? `<span class="next-player-mullit diff-dnf">DNF</span>`
-        : `<span class="next-player-mullit">HC ${p.hcScore.toFixed(2)}</span>`;
+      if (p.dnf) {
+        resultHtml = `<span class="next-player-mullit diff-dnf">DNF</span>`;
+      } else {
+        const diff = p.throws - comp.par;
+        const diffStr = diff > 0 ? `+${diff}` : diff === 0 ? 'E' : `${diff}`;
+        const diffCls = diff > 0 ? 'over-par' : diff < 0 ? 'under-par' : 'even-par';
+        resultHtml = `<span class="next-player-mullit">HC ${Math.round(p.hcScore)} <span class="score-diff ${diffCls}">${diffStr}</span></span>`;
+      }
     } else if (p.mullit !== null) {
       resultHtml = `<span class="next-player-mullit" title="Rating ${p.rating}">${p.mullit > 0 ? p.mullit + ' mulli' + (p.mullit === 1 ? '' : 'a') : '—'}</span>`;
     }
@@ -674,7 +679,7 @@ function openPlayerModal(playerName) {
       <td>${r.compName}</td>
       <td class="modal-td-c">${r.place !== null ? r.place + '.' : '\u2013'}</td>
       <td class="modal-td-c">${throwsDisplay}</td>
-      <td class="modal-td-c hc-cell">${r.hcScore !== null ? r.hcScore.toFixed(2) : '\u2013'}</td>
+      <td class="modal-td-c hc-cell">${r.hcScore !== null ? Math.round(r.hcScore) : '\u2013'}</td>
       <td class="modal-td-c">${fmtPts(r.pts)}</td>
     </tr>`;
   }).join('');
