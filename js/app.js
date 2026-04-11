@@ -471,25 +471,74 @@ function renderCurrentComp() {
     });
   }
 
+  // Paras HC pelatuista (ei DNF) — käytetään "tarvittava tulos" -laskentaan
+  const bestHC = players.reduce((best, p) => {
+    if (p.played && !p.dnf && p.hcScore !== null) {
+      return best === null || p.hcScore < best ? p.hcScore : best;
+    }
+    return best;
+  }, null);
+
   const badge = isActive ? 'Käynnissä 🔴' : 'Seuraava osakilpailu';
 
-  const playerList = players.map((p, i) => {
-    const ratingHtml = p.rating ? `<span class="next-player-rating">Rating ${p.rating}</span>` : '';
-    let resultHtml = '';
-    if (p.played) {
-      if (p.dnf) {
-        resultHtml = `<span class="next-player-mullit diff-dnf">DNF</span>`;
-      } else {
-        const diff = p.throws - comp.par;
-        const diffStr = diff > 0 ? `+${diff}` : diff === 0 ? 'E' : `${diff}`;
-        const diffCls = diff > 0 ? 'over-par' : diff < 0 ? 'under-par' : 'even-par';
-        resultHtml = `<span class="next-player-mullit">HC ${Math.round(p.hcScore)} <span class="score-diff ${diffCls}">${diffStr}</span></span>`;
-      }
-    } else if (p.mullit !== null) {
-      resultHtml = `<span class="next-player-mullit" title="Rating ${p.rating}">${p.mullit > 0 ? p.mullit + ' mulli' + (p.mullit === 1 ? '' : 'a') : '—'}</span>`;
+  const playedPlayers = players.filter(p => p.played);
+  const waitingPlayers = players.filter(p => !p.played);
+
+  const renderPlayedRow = (p, rank) => {
+    const ratingTxt = p.rating ? `Rating ${p.rating}` : '';
+    if (p.dnf) {
+      return `<li class="next-player next-player--played">
+        <span class="next-player-num next-player-num--rank">${rank}</span>
+        <div class="next-player-info"><button class="player-btn" data-player="${p.name}">${p.name}</button>${ratingTxt ? `<span class="next-player-rating">${ratingTxt}</span>` : ''}</div>
+        <span class="next-player-result diff-dnf">DNF</span>
+      </li>`;
     }
-    return `<li class="next-player"><span class="next-player-num">${i + 1}</span><button class="player-btn" data-player="${p.name}">${p.name}</button>${ratingHtml}${resultHtml}</li>`;
-  }).join('');
+    const diff = p.throws - comp.par;
+    const diffStr = diff > 0 ? `+${diff}` : diff === 0 ? 'E' : `${diff}`;
+    const diffCls = diff > 0 ? 'over-par' : diff < 0 ? 'under-par' : 'even-par';
+    return `<li class="next-player next-player--played">
+      <span class="next-player-num next-player-num--rank">${rank}</span>
+      <div class="next-player-info"><button class="player-btn" data-player="${p.name}">${p.name}</button>${ratingTxt ? `<span class="next-player-rating">${ratingTxt}</span>` : ''}</div>
+      <span class="next-player-result">HC&nbsp;${Math.round(p.hcScore)}&nbsp;<span class="score-diff ${diffCls}">${diffStr}</span></span>
+    </li>`;
+  };
+
+  const renderWaitingRow = (p) => {
+    const ratingTxt = p.rating ? `Rating ${p.rating}` : '';
+    const mullitNum = p.mullit > 0 ? String(p.mullit) : '—';
+    let targetHtml = '';
+    if (isActive && bestHC !== null && p.rating && crv) {
+      const throwsNeeded = Math.ceil(bestHC + (1000 - p.rating) / crv) - 1;
+      const parDiff = throwsNeeded - comp.par;
+      const parStr = parDiff > 0 ? `+${parDiff}` : parDiff === 0 ? 'E' : `${parDiff}`;
+      targetHtml = `<span class="beat-leader" title="Tarvitset tämän tuloksen ollaksesi yksin ykkönen">≤${throwsNeeded} (${parStr})</span>`;
+    }
+    return `<li class="next-player next-player--waiting">
+      <span class="next-player-waiting-dot"></span>
+      <div class="next-player-info"><button class="player-btn" data-player="${p.name}">${p.name}</button>${ratingTxt ? `<span class="next-player-rating">${ratingTxt}</span>` : ''}</div>
+      <span class="next-player-mullit-num">${mullitNum}</span>
+      <span class="next-player-beat">${targetHtml}</span>
+    </li>`;
+  };
+
+  let playerList = '';
+  if (playedPlayers.length > 0) {
+    playerList += `<li class="next-player-section-label">Pelannut</li>`;
+    playerList += `<li class="next-player-col-header next-player-col-header--played"><span></span><span class="next-player-col-name"></span><span class="next-player-col-result">HC (Par)</span></li>`;
+    playerList += playedPlayers.map((p, i) => renderPlayedRow(p, i + 1)).join('');
+  }
+  if (waitingPlayers.length > 0) {
+    if (playedPlayers.length > 0) {
+      playerList += `<li class="next-player-divider"></li>`;
+    }
+    const waitingLabel = isActive && playedPlayers.length > 0 ? 'Ei vielä pelannut' : 'Ilmoittautuneet';
+    const showCols = isActive && playedPlayers.length > 0;
+    playerList += `<li class="next-player-section-label">${waitingLabel}</li>`;
+    if (showCols) {
+      playerList += `<li class="next-player-col-header"><span></span><span class="next-player-col-name"></span><span class="next-player-col-mullit">Mullit</span><span class="next-player-col-beat">Score to beat</span></li>`;
+    }
+    playerList += waitingPlayers.map(p => renderWaitingRow(p)).join('');
+  }
 
   const metrixBtn   = comp.id         ? `<a class="btn btn-ghost" href="${comp.url}" target="_blank" rel="noopener noreferrer">Metrix →</a>` : '';
   const registerBtn = comp.registerUrl ? `<a class="btn btn-primary" href="${comp.registerUrl}" target="_blank" rel="noopener noreferrer">Rekisteröidy</a>` : '';
