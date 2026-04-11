@@ -117,7 +117,8 @@ function renderHeroStats() {
   const leader = standings[0];
 
   const lastComp = overComps[overComps.length - 1];
-  const lastWinner = lastComp.results.find(r => r.place === 1);
+  const lastRounded = calcRoundedResults(lastComp);
+  const lastWinner = lastRounded.find(r => r.place === 1);
 
   // Best HC score ever across all events
   let bestHCScore = Infinity, bestHCPlayer = null, bestHCComp = null;
@@ -344,8 +345,10 @@ function renderCompetitions() {
   const container = document.getElementById('competitions-container');
   if (!container) return;
   const cards = overComps.map((comp, i) => {
-    const winner = comp.results[0];
-    const winnerHC = winner.hcScore !== null ? Math.round(winner.hcScore) : 'DNF';
+    const roundedForCard = calcRoundedResults(comp);
+    const winnerResult = roundedForCard.find(r => r.place === 1) || roundedForCard[0];
+    const winnerHC = winnerResult && winnerResult.hcScore !== null ? Math.round(winnerResult.hcScore) : 'DNF';
+    const winner = winnerResult;
     const date = formatDate(comp.date);
 
     return `
