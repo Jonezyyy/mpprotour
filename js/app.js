@@ -424,12 +424,16 @@ async function fetchActiveCompLiveResults() {
     if (!res.ok) return;
     const data = await res.json();
     if (!data.Competition) return;
+    const hcMap = {};
+    (data.Competition.WeeklyHC || []).forEach(h => {
+      hcMap[h.Name] = h.Change;
+    });
     (data.Competition.Results || []).forEach(r => {
       const throws = parseInt(r.Sum, 10);
       if (r.DNF) {
-        activeCompLiveResults[r.Name] = { throws: null, dnf: true };
+        activeCompLiveResults[r.Name] = { throws: null, dnf: true, hcScore: null };
       } else if (throws > 0) {
-        activeCompLiveResults[r.Name] = { throws, dnf: false };
+        activeCompLiveResults[r.Name] = { throws, dnf: false, hcScore: hcMap[r.Name] ?? null };
       }
     });
   } catch (e) {}
@@ -455,9 +459,7 @@ function renderCurrentComp() {
     const played = !!live;
     const dnf = live ? live.dnf : false;
     const throws = (live && !live.dnf) ? live.throws : null;
-    const hcScore = (played && !dnf && throws !== null && rating && crv)
-      ? throws - (1000 - rating) / crv
-      : null;
+    const hcScore = (live && live.hcScore != null) ? live.hcScore : null;
     // Mullit shown when player hasn't played yet (both active and next states)
     const mullit = (!played && rating && crv)
       ? Math.max(0, Math.ceil((1000 - rating) / crv / 6))
@@ -470,7 +472,7 @@ function renderCurrentComp() {
       if (a.played !== b.played) return a.played ? -1 : 1;
       if (!a.played) return 0;
       if (a.dnf !== b.dnf) return a.dnf ? 1 : -1;
-      return a.hcScore - b.hcScore;
+      return Math.round(a.hcScore) - Math.round(b.hcScore);
     });
   }
 
@@ -487,11 +489,21 @@ function renderCurrentComp() {
   const playedPlayers = players.filter(p => p.played);
   const waitingPlayers = players.filter(p => !p.played);
 
-  const renderPlayedRow = (p, rank) => {
+  // Assign ranks based on rounded HC (ties get the same rank)
+  playedPlayers.forEach(p => {
+    if (p.dnf || p.hcScore === null) {
+      p.rank = null;
+    } else {
+      const rounded = Math.round(p.hcScore);
+      p.rank = playedPlayers.filter(q => !q.dnf && q.hcScore !== null && Math.round(q.hcScore) < rounded).length + 1;
+    }
+  });
+
+  const renderPlayedRow = (p) => {
     const ratingTxt = p.rating ? `Rating ${p.rating}` : '';
     if (p.dnf) {
       return `<li class="next-player next-player--played">
-        <span class="next-player-num next-player-num--rank">${rank}</span>
+        <span class="next-player-num next-player-num--rank">${p.rank ?? '–'}</span>
         <div class="next-player-info"><button class="player-btn" data-player="${p.name}">${p.name}</button>${ratingTxt ? `<span class="next-player-rating">${ratingTxt}</span>` : ''}</div>
         <span class="next-player-result diff-dnf">DNF</span>
       </li>`;
@@ -500,7 +512,7 @@ function renderCurrentComp() {
     const diffStr = diff > 0 ? `+${diff}` : diff === 0 ? 'E' : `${diff}`;
     const diffCls = diff > 0 ? 'over-par' : diff < 0 ? 'under-par' : 'even-par';
     return `<li class="next-player next-player--played">
-      <span class="next-player-num next-player-num--rank">${rank}</span>
+      <span class="next-player-num next-player-num--rank">${p.rank ?? '–'}</span>
       <div class="next-player-info"><button class="player-btn" data-player="${p.name}">${p.name}</button>${ratingTxt ? `<span class="next-player-rating">${ratingTxt}</span>` : ''}</div>
       <span class="next-player-result">HC&nbsp;${Math.round(p.hcScore)}&nbsp;<span class="score-diff ${diffCls}">${diffStr}</span></span>
     </li>`;
@@ -528,7 +540,7 @@ function renderCurrentComp() {
   if (playedPlayers.length > 0) {
     playerList += `<li class="next-player-section-label">Pelannut</li>`;
     playerList += `<li class="next-player-col-header next-player-col-header--played"><span></span><span class="next-player-col-name"></span><span class="next-player-col-result">HC (Par)</span></li>`;
-    playerList += playedPlayers.map((p, i) => renderPlayedRow(p, i + 1)).join('');
+    playerList += playedPlayers.map(p => renderPlayedRow(p)).join('');
   }
   if (waitingPlayers.length > 0) {
     if (playedPlayers.length > 0) {
