@@ -9,13 +9,13 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@700&family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 
   <link rel="icon" type="image/x-icon" href="images/favicon.ico" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="images/favicon-180.png" />
-  <link rel="stylesheet" href="css/style.css?v=1.0.9" />
+  <link rel="stylesheet" href="css/style.css?v=1.0.10" />
 </head>
 <body>
 
@@ -47,7 +47,6 @@
     <div class="hero-title">
       <div class="hero-labels">
         <span class="hero-label">Kausi 2026</span>
-        <a href="2025.html" class="hero-label hero-label-link">Kausi 2025</a>
       </div>
       <h1>Miesperhe<br>Pro Tour</h1>
       <p class="hero-subtitle" id="hero-subtitle">2 / 8 osakilpailua pelattu</p>
@@ -58,16 +57,6 @@
         <a href="#kausitilanne" class="btn btn-primary">MP Pro Tour 2026</a>
         <a href="#kilpailut" class="btn btn-ghost">Osakilpailut</a>
       </div>
-    </div>
-
-    <div class="collage-strip">
-      <div class="logo-item"><img src="images/Miesperhe_2019.JPG" alt="2019"><div class="year-badge">2019</div></div>
-      <div class="logo-item"><img src="images/Miesperhe_2020.png" alt="2020"><div class="year-badge">2020</div></div>
-      <div class="logo-item"><img src="images/Miesperhe_2021.png" alt="2021"><div class="year-badge">2021</div></div>
-      <div class="logo-item"><img src="images/Miesperhe_2022.png" alt="2022"><div class="year-badge">2022</div></div>
-      <div class="logo-item"><img src="images/Miesperhe_2023.png" alt="2023"><div class="year-badge">2023</div></div>
-      <div class="logo-item"><img src="images/Miesperhe_2024.png" alt="2024"><div class="year-badge">2024</div></div>
-      <div class="logo-item"><img src="images/Miesperhe_2025.png" alt="2025"><div class="year-badge">2025</div></div>
     </div>
 
     <div class="ticker-wrap">
@@ -86,11 +75,11 @@
   </header>
 
   <!-- ===================== Kausitilanne ================== -->
-  <section class="section" id="kausitilanne">
+  <section class="section section-primary reveal" id="kausitilanne">
     <div class="container">
       <div class="section-header">
         <h2 class="section-title">MP Pro Tour 2026</h2>
-          <span class="season-badge" id="season-progress"></span>
+          <span class="badge badge-outline" id="season-progress"></span>
         <p class="section-sub">
           
         </p>
@@ -101,7 +90,7 @@
   </section>
 
   <!-- ===================== Seuraava kilpailu ============= -->
-  <section class="section" id="seuraava">
+  <section class="section section-feature reveal" id="seuraava">
     <div class="container">
       <div class="section-header">
         <h2 class="section-title">Seuraava kilpailu</h2>
@@ -111,7 +100,7 @@
   </section>
 
   <!-- ===================== Osakilpailut ================== -->
-  <section class="section section-alt" id="kilpailut">
+  <section class="section section-muted reveal" id="kilpailut">
     <div class="container">
       <div class="section-header">
         <h2 class="section-title">Osakilpailut</h2>
@@ -125,18 +114,26 @@
   <!-- ===================== Footer ======================== -->
   <footer class="footer">
     <div class="container footer-inner">
-      <span class="footer-brand">Miesperhe Pro Tour 2026</span>
-      <span aria-hidden="true">&middot;</span>
-      <a
-        class="footer-link"
-        href="https://discgolfmetrix.com"
-        target="_blank"
-        rel="noopener noreferrer"
-      >Tulokset: Disc Golf Metrix</a>
+      <div class="footer-status">
+        <span class="footer-status-dot"></span>
+        <span class="footer-status-text">Kausi 2026 käynnissä</span>
+      </div>
+      <div class="footer-meta">
+        <span class="footer-brand">Miesperhe Pro Tour</span>
+        <span aria-hidden="true">&middot;</span>
+        <a class="footer-link" href="2025.html">Arkisto: Kausi 2025</a>
+        <span aria-hidden="true">&middot;</span>
+        <a
+          class="footer-link"
+          href="https://discgolfmetrix.com"
+          target="_blank"
+          rel="noopener noreferrer"
+        >Disc Golf Metrix</a>
+      </div>
     </div>
   </footer>
 
-  <script src="js/data.js?v=1.0.9"></script>
-  <script src="js/app.js?v=1.0.9"></script>
+  <script src="js/data.js?v=1.0.10"></script>
+  <script src="js/app.js?v=1.0.10"></script>
 </body>
 </html>

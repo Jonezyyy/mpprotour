@@ -360,12 +360,13 @@ function renderCompetitions() {
         <div class="comp-card-header">
           <div class="comp-card-title-row">
             <span class="comp-badge">Osakilpailu ${badgeNum}</span>
-            <a class="btn-metrix" href="${comp.url}" target="_blank" rel="noopener">Metrix →</a>
+            <a class="btn btn-metrix" href="${comp.url}" target="_blank" rel="noopener">Metrix →</a>
           </div>
           <h3 class="comp-name">${comp.name}</h3>
           <div class="comp-meta">
-            <span>📅 ${date}</span>
-            <span>📍 ${comp.location}</span>
+            <span>${date}</span>
+            <span class="meta-sep">•</span>
+            <span>${comp.location}</span>
           </div>
           <div class="comp-info">
             <span>${comp.course}</span>
@@ -509,7 +510,7 @@ function renderCurrentComp() {
     return best;
   }, null);
 
-  const badge = isActive ? 'Käynnissä 🔴' : 'Seuraava osakilpailu';
+  const badge = isActive ? 'Käynnissä' : 'Seuraava osakilpailu';
 
   const playedPlayers = players.filter(p => p.played);
   const waitingPlayers = players.filter(p => !p.played);
@@ -587,11 +588,12 @@ function renderCurrentComp() {
   container.innerHTML = `
     <div class="next-card">
       <div class="next-card-header">
-        <span class="comp-badge">${badge}</span>
+        <span class="comp-badge ${isActive ? 'comp-badge-live' : ''}">${badge}</span>
         <h3 class="comp-name">${comp.name}</h3>
         <div class="comp-meta">
-          <span>📍 ${comp.location}</span>
-          <span>🏁 ${comp.holes} reikää &nbsp;·&nbsp; Par ${comp.par}</span>
+          <span>${comp.location}</span>
+          <span class="meta-sep">•</span>
+          <span>${comp.holes} reikää &nbsp;·&nbsp; Par ${comp.par}</span>
         </div>
         <div class="comp-info">
           <span>${comp.course}</span>
@@ -837,6 +839,29 @@ function initNav() {
   }
 }
 
+// Scroll-reveal — .reveal-elementit fade-in scrollatessa
+function initScrollReveal() {
+  const targets = document.querySelectorAll('.reveal');
+  if (!targets.length) return;
+
+  // Fallback: jos IntersectionObserver ei tuettu, paljasta kaikki
+  if (!('IntersectionObserver' in window)) {
+    targets.forEach(el => el.classList.add('is-visible'));
+    return;
+  }
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+  targets.forEach(el => io.observe(el));
+}
+
 // --- Käynnistys ---
 
 async function fetchAllCompetitionResults() {
@@ -879,6 +904,7 @@ async function fetchRegisteredPlayers(id) {
 document.addEventListener('DOMContentLoaded', async () => {
   initModal();
   initNav();
+  initScrollReveal();
 
   // Hae tuoreet kisatulokset backendistä ennen renderöintiä
   await fetchAllCompetitionResults();
