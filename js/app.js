@@ -317,7 +317,7 @@ function buildResultsTable(comp) {
         <td>${res.place !== null ? res.place : '–'}</td>
         <td class="name-cell"><button class="player-btn" data-player="${res.name}">${res.name}</button></td>
         <td class="rating-cell">${res.rating ?? '–'}</td>
-        <td>${rawDisplay}</td>
+        <td class="throws-cell">${rawDisplay}</td>
         <td class="hc-cell ${hcClass}">${hcDisplay}</td>
         <td class="pts-cell">${fmtPts(pts)}</td>
       </tr>`;
@@ -331,7 +331,7 @@ function buildResultsTable(comp) {
             <th>#</th>
             <th>Pelaaja</th>
             <th class="rating-col" title="Metrix-rating">Rating</th>
-            <th>Heittoa</th>
+            <th class="throws-col">Heittoa</th>
             <th title="Tasoitettu tulos (HC)">HC tulos</th>
             <th>Pisteet</th>
           </tr>
@@ -344,17 +344,24 @@ function buildResultsTable(comp) {
 function renderCompetitions() {
   const container = document.getElementById('competitions-container');
   if (!container) return;
-  const cards = overComps.map((comp, i) => {
-    const roundedForCard = calcRoundedResults(comp);
-    const winnerResult = roundedForCard.find(r => r.place === 1) || roundedForCard[0];
-    const winnerHC = winnerResult && winnerResult.hcScore !== null ? Math.round(winnerResult.hcScore) : 'DNF';
-    const winner = winnerResult;
-    const date = formatDate(comp.date);
 
+  const comps = overComps.slice(); // vanhin vasemmalla, uusin oikealla
+
+  if (comps.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:2rem 0">Ei vielä tuloksia.</p>';
+    return;
+  }
+
+  const cards = comps.map(comp => {
+    const badgeNum = overComps.indexOf(comp) + 1;
+    const date = formatDate(comp.date);
     return `
       <div class="comp-card">
         <div class="comp-card-header">
-          <span class="comp-badge">Osakilpailu ${i + 1}</span>
+          <div class="comp-card-title-row">
+            <span class="comp-badge">Osakilpailu ${badgeNum}</span>
+            <a class="btn-metrix" href="${comp.url}" target="_blank" rel="noopener">Metrix →</a>
+          </div>
           <h3 class="comp-name">${comp.name}</h3>
           <div class="comp-meta">
             <span>📅 ${date}</span>
@@ -365,32 +372,50 @@ function renderCompetitions() {
             <span>${comp.holes} reikää &nbsp;·&nbsp; Par ${comp.par}</span>
           </div>
         </div>
-        <div class="comp-winner">
-          <span class="winner-label">Voittaja</span>
-          <span class="winner-name">🏆 <button class="player-btn" data-player="${winner.name}">${winner.name}</button></span>
-          <span class="winner-score">HC ${winnerHC}</span>
-        </div>
-        <div class="comp-actions">
-          <button class="btn-results" data-comp-id="${comp.id}">Näytä tulokset</button>
-          <a class="btn-metrix" href="${comp.url}" target="_blank" rel="noopener">Metrix →</a>
-        </div>
-        <div class="comp-results-panel" id="results-panel-${comp.id}" hidden>
+        <div class="comp-results-panel">
           ${buildResultsTable(comp)}
         </div>
       </div>`;
   }).join('');
 
-  container.innerHTML = cards;
+  container.innerHTML = `
+    <div class="comp-carousel-overflow" id="comp-overflow">
+      <div class="comp-carousel-track" id="comp-track">${cards}</div>
+    </div>`;
 
-  // Toggle-napit
-  container.querySelectorAll('.btn-results').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const panel = document.getElementById(`results-panel-${btn.dataset.compId}`);
-      const opening = panel.hidden;
-      panel.hidden = !opening;
-      btn.textContent = opening ? 'Piilota tulokset' : 'Näytä tulokset';
-      if (opening) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    });
+  const track    = document.getElementById('comp-track');
+  const overflow = document.getElementById('comp-overflow');
+
+  // Touch swipe
+  let touchStartX = 0;
+  let scrollStart = 0;
+  overflow.addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+    scrollStart = overflow.scrollLeft;
+  }, { passive: true });
+  overflow.addEventListener('touchmove', e => {
+    const dx = touchStartX - e.touches[0].clientX;
+    overflow.scrollLeft = scrollStart + dx;
+  }, { passive: true });
+
+  // Mouse drag (desktop)
+  let isDragging = false;
+  let dragStartX = 0;
+  let dragScrollStart = 0;
+  overflow.addEventListener('mousedown', e => {
+    isDragging = true;
+    dragStartX = e.clientX;
+    dragScrollStart = overflow.scrollLeft;
+    overflow.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    overflow.scrollLeft = dragScrollStart + (dragStartX - e.clientX);
+  });
+  window.addEventListener('mouseup', () => {
+    isDragging = false;
+    overflow.style.cursor = '';
   });
 
   // Pelaajaniminapit
