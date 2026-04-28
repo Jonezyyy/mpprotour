@@ -59,6 +59,27 @@ const COMPETITIONS = [
     ]
   },
 
+  // ── Tulossa ────────────────────────────────────────────────────────────
+  {
+    state: 'next',
+    id: 3592384,
+    name: 'Röyläntupa x2',
+    fullName: 'MP Pro Tour 2026 – Röyläntupa x2',
+    date: '2026-05-31',
+    course: 'Röyläntuvan frisbeegolfkenttä → 2 kierrosta, 18 väylää',
+    location: 'Espoo, Uusimaa',
+    holes: 18,
+    courseRatingValue: 12.01,
+    registrationEnd: '2026-05-31',
+    url: 'https://discgolfmetrix.com/3592384',
+    registerUrl: 'https://discgolfmetrix.com/?u=register_add&ID=3592384',
+    registered: [
+      'Erno Ekebom',
+      'Tomi S',
+      'Antti Karjakin'
+    ]
+  },
+
   // ── Päättyneet ─────────────────────────────────────────────────────────
   {
     state: 'over',
