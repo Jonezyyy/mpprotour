@@ -573,7 +573,7 @@ function renderCurrentComp() {
       playerList += `<li class="next-player-divider"></li>`;
     }
     const waitingLabel = isActive && playedPlayers.length > 0 ? 'Ei vielä pelannut' : 'Ilmoittautuneet';
-    const showCols = isActive && playedPlayers.length > 0;
+    const showCols = waitingPlayers.some(p => p.mullit !== null);
     playerList += `<li class="next-player-section-label">${waitingLabel}</li>`;
     if (showCols) {
       playerList += `<li class="next-player-col-header"><span></span><span class="next-player-col-name"></span><span class="next-player-col-mullit">Mullit</span><span class="next-player-col-beat">Score to beat</span></li>`;
