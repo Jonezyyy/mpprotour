@@ -65,6 +65,35 @@ const rounded = calcRoundedResults(comp);
 const winner  = rounded.find(r => r.place === 1);
 ```
 
+## Kilpailun sulkeminen — työnkulku
+
+Kun kilpailu päättyy ja seuraava aktivoidaan, tee nämä vaiheet järjestyksessä:
+
+**1. Hae tulokset backendistä:**
+```
+GET https://mpprotour-production.up.railway.app/api/competition/<id>/results
+```
+Varmista että vastauksessa `"completed": true` ennen kuin jatkat.
+
+**2. Laske HC-tulokset ja sijoitukset** käyttäen `crv`-arvoa vastauksesta:
+```
+hcScore = throws - (1000 - rating) / crv   (2 desimaalia)
+place   = pelaajat joiden Math.round(hcScore) < Math.round(oma hcScore), +1
+```
+Tasatilanne (sama pyöristetty HC) → sama sijoitusnumero.
+
+**3. Päivitä `data.js`:**
+- Sulje kilpailu: vaihda `state: 'active'` → `'over'`, poista `registered` ja `registrationEnd`, lisää `results: [...]`
+- Aktivoi seuraava: vaihda `state: 'next'` → `'active'`
+- **Pidä `COMPETITIONS`-taulukko kronologisessa järjestyksessä** (vanhin ensin).
+  Trendipiilit (`▲▼`) perustuvat `overComps[overComps.length - 1]` eli viimeiseen — väärä järjestys rikkoo trendit.
+
+**4. `results[]`-rivien muoto:**
+```js
+{ place: N, name: '...', rating: NNN, throws: NN, hc: NN.NN, hcScore: NN.NN }
+```
+DNF-pelaajalla `throws: null, hc: null, hcScore: null, place: null`.
+
 ## Työskentelytavat
 
 - **Älä pushaa** (`git push`) ellei käyttäjä erikseen pyydä. Paikalliset
