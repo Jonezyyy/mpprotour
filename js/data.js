@@ -42,6 +42,7 @@ const COMPETITIONS = [
     course: 'Röyläntuvan frisbeegolfkenttä → 2 kierrosta, 18 väylää',
     location: 'Espoo, Uusimaa',
     holes: 18,
+    par: 58,
     courseRatingValue: 12.01,
     registrationEnd: '2026-05-31',
     url: 'https://discgolfmetrix.com/3592384',

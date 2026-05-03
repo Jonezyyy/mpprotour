@@ -699,6 +699,10 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   grid-template-columns: 22px 1fr auto;
 }
 
+.next-player-col-header--with-par {
+  grid-template-columns: 22px 1fr 44px 80px 110px;
+}
+
 .next-player-col-result {
   font-family: 'Rajdhani', sans-serif;
   font-size: 0.62rem;
@@ -740,6 +744,14 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
 .next-player--waiting {
   grid-template-columns: 22px 1fr 44px 110px;
   opacity: 0.85;
+}
+
+.next-player--waiting.has-par-score {
+  grid-template-columns: 22px 1fr 44px 80px 110px;
+}
+
+.next-player--waiting.has-par-score {
+  grid-template-columns: 22px 1fr 44px 80px 110px;
 }
 
 .next-player-info {
@@ -807,6 +819,27 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   color: var(--accent);
   text-align: center;
   justify-self: center;
+}
+
+.next-player-par-score {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text);
+  text-align: right;
+  justify-self: end;
+  white-space: nowrap;
+}
+
+.next-player-col-par-score {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.55;
+  text-align: right;
 }
 
 .next-player-beat {
