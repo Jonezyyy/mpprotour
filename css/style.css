@@ -874,6 +874,95 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   .next-actions .btn { width: 100%; text-align: center; justify-content: center; }
 }
 
+/* ---- Mobile layout for the active/next event list ---- */
+@media (max-width: 600px) {
+  .next-card { max-width: 100%; }
+  .next-card-header { padding: 1.1rem 1.1rem 0.9rem; }
+  .next-card-body { padding: 1.1rem; gap: 1.1rem; }
+
+  /* Match the font-size language of the past-competition results table */
+  .next-player-list { font-size: 0.8rem; }
+  .next-player-info .player-btn { font-size: 0.85rem; }
+  .next-player-rating { font-size: 0.62rem; }
+  .next-player-result,
+  .next-player-mullit-num,
+  .next-player-par-score { font-size: 0.85rem; }
+  .score-diff { font-size: 0.8rem; }
+  .next-player-section-label,
+  .next-player-col-result,
+  .next-player-col-mullit,
+  .next-player-col-par-score,
+  .next-player-col-beat { font-size: 0.55rem; letter-spacing: 0.08em; }
+
+  /* Played rows: 3 cols, name truncates */
+  .next-player,
+  .next-player-col-header--played {
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    gap: 0 0.5rem;
+  }
+  .next-player-info { min-width: 0; }
+  .next-player-info .player-btn {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+
+  /* Waiting rows: put Mullit + Par HC SIDE-BY-SIDE as small stats,
+     and let the (longer) "score to beat" chip wrap to its own line. */
+  .next-player--waiting,
+  .next-player--waiting.has-par-score,
+  .next-player-col-header,
+  .next-player-col-header--with-par {
+    grid-template-columns: 14px minmax(0, 1fr) 38px 42px;
+    column-gap: 0.5rem;
+    row-gap: 0.15rem;
+    align-items: center;
+  }
+
+  .next-player--waiting .next-player-waiting-dot {
+    grid-column: 1;
+    grid-row: 1;
+    margin: 0;
+  }
+  .next-player--waiting .next-player-info {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .next-player--waiting .next-player-mullit-num {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: center;
+    text-align: center;
+  }
+  .next-player--waiting .next-player-par-score {
+    grid-column: 4;
+    grid-row: 1;
+    justify-self: end;
+    text-align: right;
+  }
+  /* beat-leader chip: own row spanning right side, only when present */
+  .next-player--waiting .next-player-beat {
+    grid-column: 2 / -1;
+    grid-row: 2;
+    justify-self: end;
+    text-align: right;
+  }
+  .next-player--waiting .next-player-beat:empty {
+    display: none;
+  }
+
+  /* Header row labels mirror the grid columns above */
+  .next-player-col-header > span:first-child { grid-column: 1; }
+  .next-player-col-header .next-player-col-name { grid-column: 2; }
+  .next-player-col-mullit { grid-column: 3; text-align: center; }
+  .next-player-col-par-score { grid-column: 4; text-align: right; }
+  /* Hide the "Score to beat" header on mobile — chip carries its own meaning */
+  .next-player-col-beat { display: none; }
+
+  .beat-leader { font-size: 0.68rem; padding: 1px 5px; }
+}
+
 /* =============================================================
    Competition Cards
    ============================================================= */
