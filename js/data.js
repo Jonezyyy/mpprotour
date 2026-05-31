@@ -162,6 +162,7 @@ const COMPETITIONS = [
     holes: 21,
     courseRatingValue: 8.44,
     url: 'https://discgolfmetrix.com/3646488',
+    registerUrl: 'https://discgolfmetrix.com/?u=register_add&ID=3646488',
     registrationEnd: '2026-06-30T23:00:00+03:00',
     registered: ['Jukka Vesa', 'Joonas Korpilaakso'],
   }
