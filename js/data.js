@@ -33,26 +33,6 @@ const PLAYER_RATINGS = {
 // next   = tulossa (id tai courseRatingValue voi puuttua)
 const COMPETITIONS = [
   // ── Käynnissä ──────────────────────────────────────────────────────────
-  {
-    state: 'active',
-    id: 3592384,
-    name: 'Röyläntupa x2',
-    fullName: 'MP Pro Tour 2026 – Röyläntupa x2',
-    date: '2026-05-31',
-    course: 'Röyläntuvan frisbeegolfkenttä → 2 kierrosta, 18 väylää',
-    location: 'Espoo, Uusimaa',
-    holes: 18,
-    par: 58,
-    courseRatingValue: 12.01,
-    registrationEnd: '2026-05-31',
-    url: 'https://discgolfmetrix.com/3592384',
-    registerUrl: 'https://discgolfmetrix.com/?u=register_add&ID=3592384',
-    registered: [
-      'Erno Ekebom',
-      'Tomi S',
-      'Antti Karjakin'
-    ]
-  },
 
   // ── Tulossa ────────────────────────────────────────────────────────────
 
@@ -140,6 +120,34 @@ const COMPETITIONS = [
       { place: 11, name: 'Jukka Vesa',         rating: 933, throws: 43, hc:  4.97, hcScore: 38.03 },
       { place: 12, name: 'JB Poupon',          rating: 776, throws: 56, hc: 16.61, hcScore: 39.39 },
       { place: 13, name: 'Antti Karjakin',     rating: 898, throws: 50, hc:  7.56, hcScore: 42.44 },
+    ]
+  },
+  {
+    state: 'over',
+    id: 3592384,
+    name: 'Röyläntupa x2',
+    fullName: 'MP Pro Tour 2026 – Röyläntupa x2',
+    date: '2026-05-31',
+    course: 'Röyläntuvan frisbeegolfkenttä → 2 kierrosta, 18 väylää',
+    location: 'Espoo, Uusimaa',
+    holes: 18,
+    par: 58,
+    courseRatingValue: 12.01,
+    url: 'https://discgolfmetrix.com/3592384',
+    results: [
+      { place:  1, name: 'Tuomas Kotiranta',   rating: 729, throws: 67, hc: 22.56, hcScore: 44.44 },
+      { place:  2, name: 'Markus Kotiranta',   rating: 793, throws: 62, hc: 17.24, hcScore: 44.76 },
+      { place:  2, name: 'Saku',               rating: 785, throws: 63, hc: 17.90, hcScore: 45.10 },
+      { place:  4, name: 'Viljami Julkunen',   rating: 719, throws: 69, hc: 23.40, hcScore: 45.60 },
+      { place:  4, name: 'Tomi S',             rating: 757, throws: 66, hc: 20.23, hcScore: 45.77 },
+      { place:  6, name: 'Petteri Stedt',      rating: 678, throws: 74, hc: 26.81, hcScore: 47.19 },
+      { place:  7, name: 'Petri Haukka',       rating: 737, throws: 70, hc: 21.90, hcScore: 48.10 },
+      { place:  7, name: 'Joonas Korpilaakso', rating: 811, throws: 64, hc: 15.74, hcScore: 48.26 },
+      { place:  9, name: 'Erno Ekebom',        rating: 843, throws: 62, hc: 13.07, hcScore: 48.93 },
+      { place: 10, name: 'JB Poupon',          rating: 759, throws: 71, hc: 20.07, hcScore: 50.93 },
+      { place: 10, name: 'Kari Tauriainen',    rating: 702, throws: 76, hc: 24.81, hcScore: 51.19 },
+      { place: 12, name: 'Jukka Vesa',         rating: 936, throws: 60, hc:  5.33, hcScore: 54.67 },
+      { place: 13, name: 'Antti Karjakin',     rating: 898, throws: 66, hc:  8.49, hcScore: 57.51 },
     ]
   }
 ];
