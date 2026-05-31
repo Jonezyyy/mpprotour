@@ -10,20 +10,20 @@ const POINTS_TABLE = [
 
 // Ajantasaiset Metrix-ratingit pelaajittain (päivitetään manuaalisesti)
 const PLAYER_RATINGS = {
-  'Jukka Vesa':         933,
+  'Jukka Vesa':         936,
   'Antti Karjakin':     898,
   'Otto Syvähuoko':     843,
-  'Erno Ekebom':        841,
-  'Joonas Korpilaakso': 810,
-  'Markus Kotiranta':   789,
-  'JB Poupon':          776,
-  'Saku':               770,
-  'Tomi S':             758,
-  'Petri Haukka':       736,
-  'Tuomas Kotiranta':   721,
-  'Viljami Julkunen':   720,
-  'Kari Tauriainen':    678,
-  'Petteri Stedt':      653,
+  'Erno Ekebom':        843,
+  'Joonas Korpilaakso': 811,
+  'Markus Kotiranta':   793,
+  'JB Poupon':          759,
+  'Saku':               785,
+  'Tomi S':             757,
+  'Petri Haukka':       737,
+  'Tuomas Kotiranta':   729,
+  'Viljami Julkunen':   719,
+  'Kari Tauriainen':    702,
+  'Petteri Stedt':      678,
   'Wili Vuorinen':      637,
 };
 
@@ -149,6 +149,21 @@ const COMPETITIONS = [
       { place: 12, name: 'Jukka Vesa',         rating: 936, throws: 60, hc:  5.33, hcScore: 54.67 },
       { place: 13, name: 'Antti Karjakin',     rating: 898, throws: 66, hc:  8.49, hcScore: 57.51 },
     ]
+  },
+  {
+    state: 'next',
+    id: 3646488,
+    name: 'Nummenmäki',
+    fullName: 'MP Pro Tour 2026 – Nummenmäki',
+    date: '2026-06-30',
+    course: 'Nummenmäki DiscGolfPark → DGP-21 (2017)',
+    location: 'Hyvinkää, Uusimaa',
+    par: 70,
+    holes: 21,
+    courseRatingValue: 8.44,
+    url: 'https://discgolfmetrix.com/3646488',
+    registrationEnd: '2026-06-30T23:00:00+03:00',
+    registered: ['Jukka Vesa', 'Joonas Korpilaakso'],
   }
 ];
 
