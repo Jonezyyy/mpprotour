@@ -151,7 +151,7 @@ const COMPETITIONS = [
     ]
   },
   {
-    state: 'next',
+    state: 'active',
     id: 3646488,
     name: 'Nummenmäki',
     fullName: 'MP Pro Tour 2026 – Nummenmäki',
@@ -164,7 +164,7 @@ const COMPETITIONS = [
     url: 'https://discgolfmetrix.com/3646488',
     registerUrl: 'https://discgolfmetrix.com/?u=register_add&ID=3646488',
     registrationEnd: '2026-06-30T23:00:00+03:00',
-    registered: ['Jukka Vesa', 'Joonas Korpilaakso'],
+    registered: ['Erno Ekebom', 'Markus Kotiranta', 'Tuomas Kotiranta', 'Viljami Julkunen', 'Kari Tauriainen', 'Petteri Stedt', 'Petri Haukka', 'Tomi S', 'Antti Karjakin', 'Saku', 'Joonas Korpilaakso', 'Jukka Vesa'],
   }
 ];
 
