@@ -11,19 +11,19 @@ const POINTS_TABLE = [
 // Ajantasaiset Metrix-ratingit pelaajittain (päivitetään manuaalisesti)
 const PLAYER_RATINGS = {
   'Jukka Vesa':         936,
-  'Antti Karjakin':     898,
+  'Antti Karjakin':     894,
   'Otto Syvähuoko':     843,
-  'Erno Ekebom':        843,
-  'Joonas Korpilaakso': 811,
+  'Erno Ekebom':        845,
+  'Joonas Korpilaakso': 812,
   'Markus Kotiranta':   793,
-  'JB Poupon':          759,
-  'Saku':               785,
-  'Tomi S':             757,
-  'Petri Haukka':       737,
-  'Tuomas Kotiranta':   729,
-  'Viljami Julkunen':   719,
+  'JB Poupon':          757,
+  'Saku':               792,
+  'Tomi S':             760,
+  'Petri Haukka':       738,
+  'Tuomas Kotiranta':   730,
+  'Viljami Julkunen':   736,
   'Kari Tauriainen':    702,
-  'Petteri Stedt':      678,
+  'Petteri Stedt':      681,
   'Wili Vuorinen':      637,
 };
 
@@ -151,7 +151,7 @@ const COMPETITIONS = [
     ]
   },
   {
-    state: 'active',
+    state: 'over',
     id: 3646488,
     name: 'Nummenmäki',
     fullName: 'MP Pro Tour 2026 – Nummenmäki',
@@ -162,9 +162,21 @@ const COMPETITIONS = [
     holes: 21,
     courseRatingValue: 8.44,
     url: 'https://discgolfmetrix.com/3646488',
-    registerUrl: 'https://discgolfmetrix.com/?u=register_add&ID=3646488',
-    registrationEnd: '2026-06-30T23:00:00+03:00',
-    registered: ['Erno Ekebom', 'Markus Kotiranta', 'Tuomas Kotiranta', 'Viljami Julkunen', 'Kari Tauriainen', 'Petteri Stedt', 'Petri Haukka', 'Tomi S', 'Antti Karjakin', 'Saku', 'Joonas Korpilaakso', 'Jukka Vesa'],
+    results: [
+      { place:  1, name: 'Tomi S',             rating: 760, throws:  88, hc: 28.43, hcScore: 59.57 },
+      { place:  2, name: 'Kari Tauriainen',    rating: 702, throws: 100, hc: 35.31, hcScore: 64.69 },
+      { place:  3, name: 'Joonas Korpilaakso', rating: 812, throws:  88, hc: 22.27, hcScore: 65.73 },
+      { place:  4, name: 'Erno Ekebom',        rating: 845, throws:  85, hc: 18.36, hcScore: 66.64 },
+      { place:  4, name: 'Tuomas Kotiranta',   rating: 730, throws:  99, hc: 31.99, hcScore: 67.01 },
+      { place:  6, name: 'Saku',               rating: 792, throws:  93, hc: 24.64, hcScore: 68.36 },
+      { place:  7, name: 'Viljami Julkunen',   rating: 736, throws: 100, hc: 31.28, hcScore: 68.72 },
+      { place:  8, name: 'Markus Kotiranta',   rating: 793, throws:  95, hc: 24.52, hcScore: 70.48 },
+      { place:  9, name: 'Petri Haukka',       rating: 738, throws: 102, hc: 31.04, hcScore: 70.96 },
+      { place:  9, name: 'JB Poupon',          rating: 757, throws: 100, hc: 28.79, hcScore: 71.21 },
+      { place: 11, name: 'Jukka Vesa',         rating: 936, throws:  80, hc:  7.58, hcScore: 72.42 },
+      { place: 12, name: 'Antti Karjakin',     rating: 894, throws:  87, hc: 12.56, hcScore: 74.44 },
+      { place: 13, name: 'Petteri Stedt',      rating: 681, throws: 113, hc: 37.79, hcScore: 75.21 },
+    ]
   }
 ];
 
