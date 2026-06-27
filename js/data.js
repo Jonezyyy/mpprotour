@@ -177,6 +177,22 @@ const COMPETITIONS = [
       { place: 12, name: 'Antti Karjakin',     rating: 894, throws:  87, hc: 12.56, hcScore: 74.44 },
       { place: 13, name: 'Petteri Stedt',      rating: 681, throws: 113, hc: 37.79, hcScore: 75.21 },
     ]
+  },
+  {
+    state: 'active',
+    id: 3683940,
+    name: 'Ford SIN',
+    fullName: 'MP Pro Tour 2026 – Ford SIN',
+    date: '2026-06-29',
+    course: 'Ford DiscGolfPark → Siniset koripaikat',
+    location: 'Tuusula, Uusimaa',
+    par: 60,
+    holes: 18,
+    courseRatingValue: 9.36,
+    url: 'https://discgolfmetrix.com/3683940',
+    registerUrl: 'https://discgolfmetrix.com/?u=register_add&ID=3683940',
+    registrationEnd: '2026-07-31T23:55:00+03:00',
+    registered: ['Jukka Vesa', 'Kari Tauriainen', 'Tomi S', 'Saku', 'Petri Haukka', 'Erno Ekebom'],
   }
 ];
 
