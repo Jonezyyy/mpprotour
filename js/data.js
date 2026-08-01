@@ -11,18 +11,18 @@ const POINTS_TABLE = [
 // Ajantasaiset Metrix-ratingit pelaajittain (päivitetään manuaalisesti)
 const PLAYER_RATINGS = {
   'Jukka Vesa':         933,
-  'Antti Karjakin':     870,
+  'Antti Karjakin':     861,
   'Otto Syvähuoko':     843,
   'Erno Ekebom':        846,
   'Joonas Korpilaakso': 816,
   'Markus Kotiranta':   799,
   'JB Poupon':          755,
   'Saku':               799,
-  'Tomi S':             768,
-  'Petri Haukka':       739,
+  'Tomi S':             764,
+  'Petri Haukka':       738,
   'Tuomas Kotiranta':   738,
   'Viljami Julkunen':   739,
-  'Kari Tauriainen':    701,
+  'Kari Tauriainen':    699,
   'Petteri Stedt':      677,
   'Wili Vuorinen':      637,
 };
