@@ -450,16 +450,17 @@ async function fetchActiveCompLiveResults() {
     if (!res.ok) return;
     const data = await res.json();
     if (!data.Competition) return;
-    const hcMap = {};
-    (data.Competition.WeeklyHC || []).forEach(h => {
-      hcMap[h.Name] = h.Change;
-    });
+    const crv = activeComp.courseRatingValue;
     (data.Competition.Results || []).forEach(r => {
       const throws = parseInt(r.Sum, 10);
       if (r.DNF) {
         activeCompLiveResults[r.Name] = { throws: null, dnf: true, hcScore: null };
       } else if (throws > 0) {
-        activeCompLiveResults[r.Name] = { throws, dnf: false, hcScore: hcMap[r.Name] ?? null };
+        const rating = getPlayerRating(r.Name);
+        const hcScore = (crv && rating != null)
+          ? parseFloat((throws - (1000 - rating) / crv).toFixed(2))
+          : null;
+        activeCompLiveResults[r.Name] = { throws, dnf: false, hcScore };
       }
     });
   } catch (e) {}
