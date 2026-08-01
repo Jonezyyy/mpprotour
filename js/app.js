@@ -438,7 +438,7 @@ function getPlayerRating(name) {
     const res = overComps[i].results.find(r => r.name === name);
     if (res && res.rating) return res.rating;
   }
-  return null;
+  return 1000; // No rating found → play scratch (HC = 0)
 }
 
 const activeCompLiveResults = {};
