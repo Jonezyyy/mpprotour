@@ -887,8 +887,12 @@ async function fetchAllCompetitionResults() {
       if (!crv) return;
 
       comp.results = data.players.map(p => {
-        if (p.dnf || p.throws === null || p.rating === null) {
+        if (p.dnf || p.throws === null || !(p.throws > 0)) {
           return { name: p.name, rating: p.rating, throws: null, hc: null, hcScore: null };
+        }
+        if (p.rating === null) {
+          // Ei ratingia → pelataan raakana (scratch): HC=0, hcScore = heitot
+          return { name: p.name, rating: 0, throws: p.throws, hc: 0, hcScore: p.throws };
         }
         const hc = (1000 - p.rating) / crv;
         const hcScore = p.throws - hc;
