@@ -179,7 +179,7 @@ const COMPETITIONS = [
     ]
   },
   {
-    state: 'over',
+    state: 'active',
     id: 3683940,
     name: 'Ford SIN',
     fullName: 'MP Pro Tour 2026 – Ford SIN',
@@ -190,22 +190,9 @@ const COMPETITIONS = [
     holes: 18,
     courseRatingValue: 9.36,
     url: 'https://discgolfmetrix.com/3683940',
-    results: [
-      { place:  1, name: 'Antti Karjakin',     rating: 861, throws: 69, hc: 14.85, hcScore: 54.15 },
-      { place:  1, name: 'Joonas Korpilaakso', rating: 816, throws: 74, hc: 19.66, hcScore: 54.34 },
-      { place:  3, name: 'Tomi S',             rating: 764, throws: 80, hc: 25.21, hcScore: 54.79 },
-      { place:  3, name: 'Tuomas Kotiranta',   rating: 738, throws: 83, hc: 27.99, hcScore: 55.01 },
-      { place:  3, name: 'Petteri Stedt',      rating: 677, throws: 90, hc: 34.51, hcScore: 55.49 },
-      { place:  6, name: 'Jukka Vesa',         rating: 933, throws: 63, hc:  7.16, hcScore: 55.84 },
-      { place:  7, name: 'Markus Kotiranta',   rating: 799, throws: 79, hc: 21.47, hcScore: 57.53 },
-      { place:  7, name: 'Erno Ekebom',        rating: 846, throws: 74, hc: 16.45, hcScore: 57.55 },
-      { place:  9, name: 'Viljami Julkunen',   rating: 739, throws: 87, hc: 27.88, hcScore: 59.12 },
-      { place: 10, name: 'Kari Tauriainen',    rating: 699, throws: 93, hc: 32.16, hcScore: 60.84 },
-      { place: 11, name: 'JB Poupon',          rating: 755, throws: 90, hc: 26.17, hcScore: 63.83 },
-      { place: 12, name: 'Petri Haukka',       rating: 738, throws: 95, hc: 27.99, hcScore: 67.01 },
-      { place: null, name: 'tuomo p',          rating: null, throws: 114, hc: null, hcScore: null },
-      { place: null, name: 'Saku',             rating: null, throws: null,  hc: null, hcScore: null },
-    ]
+    registerUrl: 'https://discgolfmetrix.com/?u=register_add&ID=3683940',
+    registrationEnd: '2026-07-31T23:55:00+03:00',
+    registered: ['Jukka Vesa', 'Kari Tauriainen', 'Tomi S', 'Saku', 'Petri Haukka', 'Erno Ekebom', 'tuomo p'],
   }
 ];
 

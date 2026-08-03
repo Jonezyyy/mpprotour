@@ -453,7 +453,8 @@ async function fetchActiveCompLiveResults() {
     const crv = activeComp.courseRatingValue;
     (data.Competition.Results || []).forEach(r => {
       const throws = parseInt(r.Sum, 10);
-      if (r.DNF) {
+      if (r.DNF && !(throws > 0)) {
+        // real DNF: Metrix flagged it and no valid score
         activeCompLiveResults[r.Name] = { throws: null, dnf: true, hcScore: null };
       } else if (throws > 0) {
         const rating = getPlayerRating(r.Name);
