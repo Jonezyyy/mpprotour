@@ -24,6 +24,7 @@ const PLAYER_RATINGS = {
   'Viljami Julkunen':   739,
   'Kari Tauriainen':    699,
   'Petteri Stedt':      677,
+  'Jukka Autio':        662,
   'Wili Vuorinen':      637,
 };
 

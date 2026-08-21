@@ -32,15 +32,31 @@ test('PLAYER_RATINGS kelpaa kun pelaajalta ei löydy tulosta mistään kisasta',
 
 test('tuntematon pelaaja pelaa scratchina eikä saa keksittyä ratingia', async () => {
   const site = loadSite();
-  assert.equal(known(site, 'Jukka Autio'), null, 'ratingia ei ole');
-  assert.equal(rating(site, 'Jukka Autio'), 1000, 'scratch → HC 0');
+  assert.equal(known(site, 'Tuntematon Pelaaja'), null, 'ratingia ei ole');
+  assert.equal(rating(site, 'Tuntematon Pelaaja'), 1000, 'scratch → HC 0');
 
   const crv = site.comp(KANTOLA).courseRatingValue;
-  assert.equal((1000 - rating(site, 'Jukka Autio')) / crv, 0, 'handicap on nolla');
+  assert.equal((1000 - rating(site, 'Tuntematon Pelaaja')) / crv, 0, 'handicap on nolla');
+});
+
+test('PLAYER_RATINGS antaa ratingin myös pelaajalle jolla ei ole tulosta yhdestäkään kisasta', async () => {
+  // Jukka Autiolla on Metrix-rating, muttei tulosta yhdessäkään tourin kisassa.
+  // Käsin syötetyn arvon pitää silti tuottaa oikea handicap.
+  const site = loadSite();
+  assert.equal(known(site, 'Jukka Autio'), 662, 'ei saa pudota scratchiin');
+
+  const crv = site.comp(KANTOLA).courseRatingValue;
+  assert.ok((1000 - rating(site, 'Jukka Autio')) / crv > 0, 'handicap on suurempi kuin nolla');
+
+  site.get('renderCurrentComp()');
+  assert.match(site.card(), /Rating 662/);
+  assert.doesNotMatch(site.card(), /Ei ratingia/, 'kentässä ei ole ratingittomia');
 });
 
 test('kortti kertoo ratingittomasta pelaajasta suoraan', async () => {
+  // Riippumaton nykyisestä pelaajaluettelosta: viedään yhdeltä pelaajalta rating pois.
   const site = loadSite();
+  site.get("delete PLAYER_RATINGS['Jukka Autio']");
   site.get('renderCurrentComp()');
 
   assert.match(site.card(), /Jukka Autio/);
