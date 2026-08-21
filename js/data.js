@@ -33,8 +33,69 @@ const PLAYER_RATINGS = {
 // next   = tulossa (id tai courseRatingValue voi puuttua)
 const COMPETITIONS = [
   // ── Käynnissä ──────────────────────────────────────────────────────────
+  {
+    state: 'active',
+    id: 3743534,
+    name: 'Kantola',
+    fullName: 'MP Pro Tour 2026 – Kantola',
+    date: '2026-08-22',
+    course: 'Kantola Urban DiscGolfPark → Etutiit',
+    location: 'Hämeenlinna, Kanta-Häme',
+    par: 66,
+    holes: 18,
+    courseRatingValue: 7.09,
+    registrationEnd: '2026-08-22',
+    url: 'https://discgolfmetrix.com/3743534',
+    registerUrl: 'https://discgolfmetrix.com/?u=register_add&ID=3743534',
+    registered: [
+      'Jukka Autio',
+      'Wili Vuorinen',
+      'Erno Ekebom',
+      'JB Poupon',
+      'Joonas Korpilaakso',
+      'Viljami Julkunen',
+      'Petri Haukka',
+      'Antti Karjakin',
+      'Petteri Stedt',
+      'Tomi S',
+      'Markus Kotiranta',
+      'Tuomas Kotiranta',
+      'Kari Tauriainen',
+      'Jukka Vesa'
+    ]
+  },
 
   // ── Tulossa ────────────────────────────────────────────────────────────
+  {
+    state: 'next',
+    id: 3743540,
+    name: 'Iittala',
+    fullName: 'MP Pro Tour 2026 – Iittala',
+    date: '2026-08-22',
+    course: 'Iittala (lähtö parkkipaikalta)',
+    location: 'Hämeenlinna, Kanta-Häme',
+    par: 56,
+    holes: 18,
+    courseRatingValue: 11,
+    registrationEnd: '2026-08-22',
+    url: 'https://discgolfmetrix.com/3743540',
+    registerUrl: 'https://discgolfmetrix.com/?u=register_add&ID=3743540',
+    registered: [
+      'Wili Vuorinen',
+      'Erno Ekebom',
+      'JB Poupon',
+      'Joonas Korpilaakso',
+      'Viljami Julkunen',
+      'Petri Haukka',
+      'Antti Karjakin',
+      'Petteri Stedt',
+      'Tomi S',
+      'Markus Kotiranta',
+      'Tuomas Kotiranta',
+      'Kari Tauriainen',
+      'Jukka Vesa'
+    ]
+  },
 
   // ── Päättyneet ─────────────────────────────────────────────────────────
   {

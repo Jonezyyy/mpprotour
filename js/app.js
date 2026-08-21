@@ -1,9 +1,18 @@
 'use strict';
 
 // --- Kilpailunäkymät ---
-const overComps  = COMPETITIONS.filter(c => c.state === 'over');
-const activeComp = COMPETITIONS.find(c => c.state === 'active') ?? null;
-const nextComp   = COMPETITIONS.find(c => c.state === 'next')   ?? null;
+// Kilpailujen tila johdetaan ajonaikaisesti: Metrix kertoo milloin osakilpailu on
+// päättynyt, joten 'active' → 'over' -siirtymä tapahtuu automaattisesti
+// (ks. fetchAllCompetitionResults). Järjestys päivämäärän mukaan, ei taulukon mukaan.
+let overComps   = [];
+let currentComp = null;   // vanhin vielä pelaamaton kilpailu = se joka näytetään
+
+function recomputeCompStates() {
+  const byDate = (a, b) => String(a.date || '').localeCompare(String(b.date || ''));
+  overComps = COMPETITIONS.filter(c => c.state === 'over').sort(byDate);
+  currentComp = COMPETITIONS.filter(c => c.state !== 'over').sort(byDate)[0] ?? null;
+}
+recomputeCompStates();
 
 // --- Pisteytysfunktiot ---
 
@@ -427,67 +436,138 @@ function renderCompetitions() {
 
 // --- Renderöinti: Nykyinen kilpailu ---
 
-function getPlayerRating(name) {
-  if (PLAYER_RATINGS && PLAYER_RATINGS[name]) return PLAYER_RATINGS[name];
+// Palauttaa null jos ratingia ei löydy mistään — kutsuja päättää mitä tekee.
+function lookupPlayerRating(name) {
+  // Tuorein Metrix-rating voittaa, jotta ratingit päivittyvät itsestään kun
+  // osakilpailu sulkeutuu. PLAYER_RATINGS on varalla niille joilta Metrix-rating puuttuu.
   const md = metrixData[name];
   if (md) {
     const latestId = overComps.slice().reverse().map(c => c.id).find(id => md[id]);
     if (latestId && md[latestId].rating) return md[latestId].rating;
   }
   for (let i = overComps.length - 1; i >= 0; i--) {
-    const res = overComps[i].results.find(r => r.name === name);
+    const res = (overComps[i].results || []).find(r => r.name === name);
     if (res && res.rating) return res.rating;
   }
-  return 1000; // No rating found → play scratch (HC = 0)
+  if (PLAYER_RATINGS && PLAYER_RATINGS[name]) return PLAYER_RATINGS[name];
+  return null;
 }
 
-const activeCompLiveResults = {};
+function getPlayerRating(name) {
+  return lookupPlayerRating(name) ?? 1000; // No rating found → play scratch (HC = 0)
+}
 
-async function fetchActiveCompLiveResults() {
-  if (!activeComp || !activeComp.id) return;
+// Live-tulokset kilpailun id:n mukaan: { [compId]: { [pelaaja]: {...} } }.
+// Kilpailukohtainen avain estää sen että kahden saman päivän kisan tulokset
+// sekoittuvat keskenään (HC lasketaan eri courseRatingValue-arvolla).
+const liveResultsByComp = {};
+
+function liveResultsFor(comp) {
+  return (comp && liveResultsByComp[comp.id]) || null;
+}
+
+async function fetchCurrentCompLiveResults() {
+  const comp = currentComp;
+  if (!comp || !comp.id) return;
   try {
-    const res = await fetch(`https://discgolfmetrix.com/api.php?content=result&id=${activeComp.id}`);
+    const res = await fetch(`https://discgolfmetrix.com/api.php?content=result&id=${comp.id}`);
     if (!res.ok) return;
     const data = await res.json();
     if (!data.Competition) return;
-    const crv = activeComp.courseRatingValue;
+    const crv = comp.courseRatingValue;
+    const live = {};
     (data.Competition.Results || []).forEach(r => {
       const throws = parseInt(r.Sum, 10);
       if (r.DNF && !(throws > 0)) {
         // real DNF: Metrix flagged it and no valid score
-        activeCompLiveResults[r.Name] = { throws: null, dnf: true, hcScore: null };
+        live[r.Name] = { throws: null, dnf: true, hcScore: null };
       } else if (throws > 0) {
         const rating = getPlayerRating(r.Name);
         const hcScore = (crv && rating != null)
           ? parseFloat((throws - (1000 - rating) / crv).toFixed(2))
           : null;
-        activeCompLiveResults[r.Name] = { throws, dnf: false, hcScore };
+        live[r.Name] = { throws, dnf: false, hcScore };
       }
     });
+    liveResultsByComp[comp.id] = live;
   } catch (e) {}
   renderCurrentComp();
+}
+
+const CURRENT_COMP_HEADING = 'Seuraava kilpailu';
+
+function setCurrentCompHeading(text) {
+  const el = document.querySelector('#seuraava .section-title');
+  if (el) el.textContent = text || CURRENT_COMP_HEADING;
+}
+
+// Kaikki osakilpailut pelattu → ei "seuraavaa kilpailua" näytettäväksi.
+function renderSeasonOver(container) {
+  setCurrentCompHeading('Kausi päättynyt');
+  const champion = buildStandings()[0] ?? null;
+  const podium = champion
+    ? `<div class="next-card-body">
+        <div class="next-registered">
+          <p class="next-registered-title">Mestari</p>
+          <ul class="next-player-list">
+            <li class="next-player next-player--played">
+              <span class="next-player-num next-player-num--rank">🥇</span>
+              <div class="next-player-info"><button class="player-btn" data-player="${champion.name}">${champion.name}</button></div>
+              <span class="next-player-result">${fmtPts(champion.total)} p</span>
+            </li>
+          </ul>
+        </div>
+      </div>`
+    : '';
+
+  container.innerHTML = `
+    <div class="next-card">
+      <div class="next-card-header">
+        <span class="comp-badge">Kausi päättynyt</span>
+        <h3 class="comp-name">MP Pro Tour 2026</h3>
+        <div class="comp-meta">
+          <span>${overComps.length} / ${TOTAL_EVENTS} osakilpailua pelattu</span>
+        </div>
+        <div class="comp-info">
+          <span>Kaikki osakilpailut on pelattu. Kiitos kaudesta!</span>
+        </div>
+      </div>
+      ${podium}
+    </div>`;
+
+  container.querySelectorAll('.player-btn').forEach(btn => {
+    btn.addEventListener('click', () => openPlayerModal(btn.dataset.player));
+  });
 }
 
 function renderCurrentComp() {
   const container = document.getElementById('next-event-container');
   if (!container) return;
 
-  const comp = activeComp || nextComp;
-  if (!comp) return;
+  const comp = currentComp;
+  if (!comp) {
+    renderSeasonOver(container);
+    return;
+  }
+  setCurrentCompHeading(null);
 
   const crv = comp.courseRatingValue;
-  const isActive = comp.state === 'active';
+  // Kisa on "käynnissä" jos data.js sanoo niin TAI jos Metrixissä on jo tuloksia.
+  // Jälkimmäinen nostaa seuraavan kisan liveksi ilman käsin tehtävää tilamuutosta.
+  const live = liveResultsFor(comp);
+  const isActive = comp.state === 'active' || (live !== null && Object.keys(live).length > 0);
   const regEnd = comp.registrationEnd
     ? new Date(comp.registrationEnd).toLocaleDateString('fi-FI', { day: 'numeric', month: 'long', year: 'numeric' })
     : null;
 
   const players = comp.registered.map(name => {
-    const rating = getPlayerRating(name);
-    const live = isActive ? activeCompLiveResults[name] : null;
-    const played = !!live;
-    const dnf = live ? live.dnf : false;
-    const throws = (live && !live.dnf) ? live.throws : null;
-    const hcScore = (live && live.hcScore != null) ? live.hcScore : null;
+    const knownRating = lookupPlayerRating(name);
+    const rating = knownRating ?? 1000;   // ei ratingia → scratch (HC 0)
+    const res = live ? live[name] : null;
+    const played = !!res;
+    const dnf = res ? res.dnf : false;
+    const throws = (res && !res.dnf) ? res.throws : null;
+    const hcScore = (res && res.hcScore != null) ? res.hcScore : null;
     // Mullit shown when player hasn't played yet (both active and next states)
     const mullit = (!played && rating && crv)
       ? Math.max(0, Math.ceil((1000 - rating) / crv / 6))
@@ -495,7 +575,7 @@ function renderCurrentComp() {
     const parScore = (!played && rating && crv && comp.par != null)
       ? Math.round(comp.par + (1000 - rating) / crv)
       : null;
-    return { name, rating, throws, dnf, played, hcScore, mullit, parScore };
+    return { name, rating, rated: knownRating !== null, throws, dnf, played, hcScore, mullit, parScore };
   });
 
   if (isActive) {
@@ -530,8 +610,10 @@ function renderCurrentComp() {
     }
   });
 
+  const ratingLabel = (p) => p.rated ? `Rating ${p.rating}` : 'Ei ratingia';
+
   const renderPlayedRow = (p) => {
-    const ratingTxt = p.rating ? `Rating ${p.rating}` : '';
+    const ratingTxt = ratingLabel(p);
     if (p.dnf) {
       return `<li class="next-player next-player--played">
         <span class="next-player-num next-player-num--rank">${p.rank ?? '–'}</span>
@@ -550,7 +632,7 @@ function renderCurrentComp() {
   };
 
   const renderWaitingRow = (p) => {
-    const ratingTxt = p.rating ? `Rating ${p.rating}` : '';
+    const ratingTxt = ratingLabel(p);
     const mullitNum = p.mullit > 0 ? String(p.mullit) : '—';
     let parScoreHtml = '';
     if (p.parScore != null) {
@@ -875,8 +957,16 @@ function initScrollReveal() {
 
 // --- Käynnistys ---
 
+// Metrix täyttää WeeklyHC:n vasta kun osakilpailu on päättynyt → se on "kisa ohi" -signaali.
+// Varmistus: suljetaan vasta kun vähintään tämä osuus pelaajista on saanut tuloksen,
+// jottei kesken kierroksen ilmestyvä WeeklyHC sulje kisaa liian aikaisin.
+const AUTOCLOSE_MIN_PLAYED_RATIO = 0.5;
+
 async function fetchAllCompetitionResults() {
-  await Promise.all(overComps.map(async comp => {
+  // Käydään läpi kaikki kilpailut joilla on Metrix-id: päättyneiden tulokset
+  // päivitetään ja käynnissä oleva suljetaan automaattisesti kun Metrix on valmis.
+  const comps = COMPETITIONS.filter(c => c.id);
+  await Promise.all(comps.map(async comp => {
     try {
       const res = await fetch(`${RAILWAY_API_URL}/api/competition/${comp.id}/results`);
       if (!res.ok) return;
@@ -885,6 +975,11 @@ async function fetchAllCompetitionResults() {
 
       const crv = data.crv;
       if (!crv) return;
+
+      if (comp.state !== 'over') {
+        const played = data.players.filter(p => p.throws > 0).length;
+        if (played < data.players.length * AUTOCLOSE_MIN_PLAYED_RATIO) return;
+      }
 
       comp.results = data.players.map(p => {
         if (p.dnf || p.throws === null || !(p.throws > 0)) {
@@ -898,10 +993,14 @@ async function fetchAllCompetitionResults() {
         const hcScore = p.throws - hc;
         return { name: p.name, rating: p.rating, throws: p.throws, hc, hcScore };
       });
+      // Metrixin laskema arvo korvaa data.js:n käsin syötetyn arvion
+      comp.courseRatingValue = crv;
+      comp.state = 'over';
     } catch (e) {
       // Pidetään data.js:n varmuuskopio
     }
   }));
+  recomputeCompStates();
 }
 
 async function fetchRegisteredPlayers(id) {
@@ -933,12 +1032,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Renderöi nykyinen kilpailu heti staattisilla tiedoilla
   renderCurrentComp();
 
-  // Hae ilmoittautuneet ja live-tulokset
-  const currentComp = activeComp || nextComp;
+  // Hae ilmoittautuneet ja live-tulokset näytettävälle kilpailulle
   if (currentComp && currentComp.id) {
-    const live = await fetchRegisteredPlayers(currentComp.id);
-    if (live) currentComp.registered = live;
+    const registered = await fetchRegisteredPlayers(currentComp.id);
+    if (registered) currentComp.registered = registered;
     renderCurrentComp();
-    if (activeComp) fetchActiveCompLiveResults();
+    // Haetaan aina: jos Metrixissä on jo tuloksia, kisa nousee liveksi itsestään.
+    fetchCurrentCompLiveResults();
   }
 });
