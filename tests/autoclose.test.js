@@ -51,6 +51,30 @@ test('Metrixin laskema crv korvaa data.js:n käsin syötetyn arvion', async () =
   assert.equal(site.comp(KANTOLA).courseRatingValue, 7.2);
 });
 
+test('kilpailu sulkeutuu käsin syötetyllä crv:llä kun Metrix ei laske handicapeja', async () => {
+  // Metrix palauttaa WeeklyHC:n ratingeineen mutta HC-kentät tyhjinä, jolloin
+  // backend ei saa laskettua crv:tä (näin kävi Kantolassa 2026).
+  const site = loadSite({ results: { [KANTOLA]: railwayResults(KANTOLA_FIELD, null) } });
+  await site.run('fetchAllCompetitionResults()');
+
+  assert.ok(site.compNames().includes('Kantola'), 'kisa ei saa jäädä auki');
+  assert.equal(site.comp(KANTOLA).courseRatingValue, 7.09, 'käsin syötetty arvo säilyy');
+
+  // HC-tulokset lasketaan arviolla: Tomi S, 83 heittoa, rating 768
+  const tomi = site.get(`COMPETITIONS.find(c => c.id === ${KANTOLA})`)
+    .results.find(r => r.name === 'Tomi S');
+  assert.ok(Math.abs(tomi.hc - (1000 - tomi.rating) / 7.09) < 0.01);
+});
+
+test('kilpailu jää auki jos crv:tä ei ole mistään saatavilla', async () => {
+  const site = loadSite({ results: { [KANTOLA]: railwayResults(KANTOLA_FIELD, null) } });
+  site.get(`COMPETITIONS.find(c => c.id === ${KANTOLA}).courseRatingValue = null`);
+  await site.run('fetchAllCompetitionResults()');
+
+  assert.ok(!site.compNames().includes('Kantola'), 'ilman crv:tä ei voi laskea tuloksia');
+  assert.equal(site.current().name, 'Kantola');
+});
+
 test('kilpailut sulkeutuvat toisistaan riippumatta', async () => {
   // Iittala ehtii maaliin ensin, Kantola on yhä kesken.
   const kesken = KANTOLA_FIELD.map(([n, r, t], i) => [n, r, i < 2 ? t : null]);

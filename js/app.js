@@ -973,7 +973,11 @@ async function fetchAllCompetitionResults() {
       const data = await res.json();
       if (!data.completed || !Array.isArray(data.players) || data.players.length === 0) return;
 
-      const crv = data.crv;
+      // Metrix ei aina laske handicapeja (WeeklyHC:n HC-kentät tyhjiä, kuten
+      // Kantolassa 2026). Silloin käytetään data.js:n käsin syötettyä arvoa,
+      // jottei kilpailu jää ikuisesti auki.
+      const metrixCrv = data.crv;
+      const crv = metrixCrv || comp.courseRatingValue;
       if (!crv) return;
 
       if (comp.state !== 'over') {
@@ -993,8 +997,9 @@ async function fetchAllCompetitionResults() {
         const hcScore = p.throws - hc;
         return { name: p.name, rating: p.rating, throws: p.throws, hc, hcScore };
       });
-      // Metrixin laskema arvo korvaa data.js:n käsin syötetyn arvion
-      comp.courseRatingValue = crv;
+      // Metrixin laskema arvo korvaa data.js:n käsin syötetyn arvion — mutta
+      // vain jos Metrix tosiaan antoi sellaisen.
+      if (metrixCrv) comp.courseRatingValue = metrixCrv;
       comp.state = 'over';
     } catch (e) {
       // Pidetään data.js:n varmuuskopio
