@@ -985,6 +985,19 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   padding-bottom: 0.25rem; /* prevents card box-shadow clip */
 }
 
+/* Arkistokaudet: kaikki osakilpailut näkyvissä kerralla, ei karusellia */
+.archive-comps {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  align-items: start;
+}
+
+.comp-card--archive {
+  flex: initial;
+  min-width: 0;
+}
+
 /* Each card — exactly half the overflow container minus the gap */
 .comp-card {
   flex: 0 0 calc((100% - 1.5rem) / 2);

@@ -305,6 +305,137 @@ function renderStandings2025() {
     </div>`;
 }
 
+// --- Renderöinti: Arkistokausien osakilpailut ---
+
+/**
+ * Renderöi päättyneen kauden osakilpailut allekkain, kaikki kerralla näkyviin.
+ * @param {string} containerId
+ * @param {Array}  comps
+ * @param {Object} opts
+ * @param {boolean} opts.showPoints      Näytä pistesarake (vain jos kausi käytti
+ *                                       nykyistä POINTS_TABLE-pisteytystä).
+ * @param {boolean} opts.recomputePlaces Laske sijoitukset HC-tuloksesta. Kaudella
+ *                                       2025 oli eri järjestelmä, joten sen
+ *                                       tallennetut sijoitukset käytetään sellaisenaan.
+ */
+function renderArchiveCompetitions(containerId, comps, opts = {}) {
+  const container = document.getElementById(containerId);
+  if (!container || !Array.isArray(comps) || comps.length === 0) return;
+
+  const { showPoints = false, recomputePlaces = true } = opts;
+
+  const cards = comps.map((comp, idx) => {
+    // Kun sijoitukset lasketaan HC-tuloksesta, järjestetään HC:n mukaan. Kaudella
+    // 2025 sijoitus tuli eri järjestelmästä, joten järjestetään sen mukaan — muuten
+    // rivit näyttäisivät sekoitetuilta (1, 2, 7, ...).
+    const rows = (recomputePlaces ? calcRoundedResults(comp) : comp.results.slice())
+      .sort((a, b) => {
+        const [x, y] = recomputePlaces ? [a.hcScore, b.hcScore] : [a.place, b.place];
+        if (x == null && y == null) return 0;
+        if (x == null) return 1;
+        if (y == null) return -1;
+        return x - y;
+      });
+
+    const cells = rows.map(res => {
+      const pts = showPoints ? calcEventPoints(res.place, rows) : null;
+      const hcClass = res.hcScore === null ? 'diff-dnf' : '';
+      return `
+        <tr>
+          <td>${res.place != null ? res.place : '–'}</td>
+          <td class="name-cell">${res.name}</td>
+          <td class="rating-cell">${res.rating ?? '–'}</td>
+          <td class="throws-cell">${res.throws != null ? res.throws : '–'}</td>
+          <td class="hc-cell ${hcClass}">${formatHC(res.hcScore)}</td>
+          ${showPoints ? `<td class="pts-cell">${fmtPts(pts)}</td>` : ''}
+        </tr>`;
+    }).join('');
+
+    const parMeta = (comp.holes != null && comp.par != null)
+      ? `<span>${comp.holes} reikää &nbsp;·&nbsp; Par ${comp.par}</span>`
+      : '';
+
+    return `
+      <div class="comp-card comp-card--archive">
+        <div class="comp-card-header">
+          <div class="comp-card-title-row">
+            <span class="comp-badge">Osakilpailu ${idx + 1}</span>
+            <a class="btn btn-metrix" href="${comp.url}" target="_blank" rel="noopener">Metrix →</a>
+          </div>
+          <h3 class="comp-name">${comp.name}</h3>
+          <div class="comp-meta">
+            <span>${formatDate(comp.date)}</span>
+            <span class="meta-sep">•</span>
+            <span>${comp.location}</span>
+          </div>
+          <div class="comp-info">
+            <span>${comp.course}</span>
+            ${parMeta}
+          </div>
+        </div>
+        <div class="comp-results-panel">
+          <div class="table-wrapper">
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Pelaaja</th>
+                  <th class="rating-col" title="Metrix-rating">Rating</th>
+                  <th class="throws-col">Heittoa</th>
+                  <th title="Tasoitettu tulos (HC)">HC tulos</th>
+                  ${showPoints ? '<th>Pisteet</th>' : ''}
+                </tr>
+              </thead>
+              <tbody>${cells}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = `<div class="archive-comps">${cards}</div>`;
+}
+
+// Kauden 2026 loppusijoitukset jäädytetystä datasta
+function renderStandings2026Archive(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const standings = buildStandings(COMPETITIONS_2026);
+  const compHeaders = COMPETITIONS_2026.map(c => `<th class="pts-col">${c.name}</th>`).join('');
+
+  const rows = standings.map((player, idx) => {
+    const rank = idx + 1;
+    const rowClass = rank === 1 ? 'rank-gold' : rank === 2 ? 'rank-silver' : rank === 3 ? 'rank-bronze' : '';
+    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+    const eventCells = COMPETITIONS_2026
+      .map(comp => `<td class="pts-cell">${fmtPts(player.events[comp.id])}</td>`).join('');
+
+    return `
+      <tr class="${rowClass}">
+        <td class="rank-cell">${medal}</td>
+        <td class="name-cell">${player.name}</td>
+        ${eventCells}
+        <td class="total-cell">${fmtPts(player.total)}</td>
+      </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="table-wrapper">
+      <table class="standings-table">
+        <thead>
+          <tr>
+            <th class="rank-col">#</th>
+            <th>Pelaaja</th>
+            ${compHeaders}
+            <th class="total-col">Yht.</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
 // --- Renderöinti: Osakilpailut ---
 
 function buildResultsTable(comp) {
@@ -1031,6 +1162,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderHeroStats();
   renderStandings();
   renderStandings2025();
+  // Arkistosivut: nämä eivät tee mitään jos konttia ei ole (esim. etusivulla)
+  renderStandings2026Archive('standings-2026-container');
+  renderArchiveCompetitions('competitions-2026-container', COMPETITIONS_2026, { showPoints: true });
+  renderArchiveCompetitions('competitions-2025-container', COMPETITIONS_2025, { showPoints: false, recomputePlaces: false });
   renderCompetitions();
   fetchMetrixData(); // async: päivittää ratingit, kutsuu renderCurrentComp()
 
