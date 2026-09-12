@@ -7,16 +7,16 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
   loadSite, railwayResults, metrixLive,
-  KANTOLA, IITTALA, KANTOLA_FIELD, IITTALA_FIELD
+  TEST_ACTIVE, TEST_NEXT, TEST_ACTIVE_FIELD, TEST_NEXT_FIELD
 } = require('./support');
 
 const rating = (site, name) => site.get(`getPlayerRating(${JSON.stringify(name)})`);
 const known  = (site, name) => site.get(`lookupPlayerRating(${JSON.stringify(name)})`);
 
 test('rating tulee viimeisimmästä kilpailusta, ei PLAYER_RATINGS-taulukosta', async () => {
-  // Kantola sulkeutuu ja antaa Tomi S:lle uuden ratingin 771.
-  const kentta = KANTOLA_FIELD.map(([n, r, t]) => n === 'Tomi S' ? [n, 771, t] : [n, r, t]);
-  const site = loadSite({ results: { [KANTOLA]: railwayResults(kentta, 7.2) } });
+  // Testikisa A sulkeutuu ja antaa Tomi S:lle uuden ratingin 771.
+  const kentta = TEST_ACTIVE_FIELD.map(([n, r, t]) => n === 'Tomi S' ? [n, 771, t] : [n, r, t]);
+  const site = loadSite({ results: { [TEST_ACTIVE]: railwayResults(kentta, 7.2) } });
 
   assert.equal(site.get("PLAYER_RATINGS['Tomi S']"), 764, 'taulukossa vanha arvo');
   await site.run('fetchAllCompetitionResults()');
@@ -35,7 +35,7 @@ test('tuntematon pelaaja pelaa scratchina eikä saa keksittyä ratingia', async 
   assert.equal(known(site, 'Tuntematon Pelaaja'), null, 'ratingia ei ole');
   assert.equal(rating(site, 'Tuntematon Pelaaja'), 1000, 'scratch → HC 0');
 
-  const crv = site.comp(KANTOLA).courseRatingValue;
+  const crv = site.comp(TEST_ACTIVE).courseRatingValue;
   assert.equal((1000 - rating(site, 'Tuntematon Pelaaja')) / crv, 0, 'handicap on nolla');
 });
 
@@ -45,7 +45,7 @@ test('PLAYER_RATINGS antaa ratingin myös pelaajalle jolla ei ole tulosta yhdest
   const site = loadSite();
   assert.equal(known(site, 'Jukka Autio'), 662, 'ei saa pudota scratchiin');
 
-  const crv = site.comp(KANTOLA).courseRatingValue;
+  const crv = site.comp(TEST_ACTIVE).courseRatingValue;
   assert.ok((1000 - rating(site, 'Jukka Autio')) / crv > 0, 'handicap on suurempi kuin nolla');
 
   site.get('renderCurrentComp()');
@@ -54,55 +54,57 @@ test('PLAYER_RATINGS antaa ratingin myös pelaajalle jolla ei ole tulosta yhdest
 });
 
 test('kortti kertoo ratingittomasta pelaajasta suoraan', async () => {
-  // Riippumaton nykyisestä pelaajaluettelosta: viedään yhdeltä pelaajalta rating pois.
+  // Keksitty pelaaja jolla ei ole rating-tietoa mistään lähteestä (ei
+  // PLAYER_RATINGS:sta eikä yhdenkään päättyneen kisan tuloksista).
   const site = loadSite();
-  site.get("delete PLAYER_RATINGS['Jukka Autio']");
+  const nimi = 'Testaaja Ilman Ratingia';
+  site.get(`COMPETITIONS.find(c => c.id === ${TEST_ACTIVE}).registered.push(${JSON.stringify(nimi)})`);
   site.get('renderCurrentComp()');
 
-  assert.match(site.card(), /Jukka Autio/);
+  assert.match(site.card(), new RegExp(nimi));
   assert.match(site.card(), /Ei ratingia/);
   assert.doesNotMatch(site.card(), /Rating 1000/, 'ei saa näyttää keksityltä ratingilta');
 });
 
 test('live-tulokset lasketaan kunkin kilpailun omalla crv:llä', async () => {
   // Sama pelaaja, sama heittomäärä, kaksi eri rataa: HC-tuloksen pitää erota,
-  // koska Kantolan crv on 7.09 ja Iittalan 11.
+  // koska Testikisa A:n crv on 7.09 ja Testikisa B:n 11.
   const heitot = 70;
   const nimi = 'Tomi S';
 
-  const kantola = loadSite({ metrix: { [KANTOLA]: metrixLive([[nimi, heitot]]) } });
-  await kantola.run('fetchCurrentCompLiveResults()');
-  const hcKantola = kantola.get(`liveResultsByComp[${KANTOLA}][${JSON.stringify(nimi)}].hcScore`);
+  const active = loadSite({ metrix: { [TEST_ACTIVE]: metrixLive([[nimi, heitot]]) } });
+  await active.run('fetchCurrentCompLiveResults()');
+  const hcActive = active.get(`liveResultsByComp[${TEST_ACTIVE}][${JSON.stringify(nimi)}].hcScore`);
 
-  const iittala = loadSite({
-    results: { [KANTOLA]: railwayResults(KANTOLA_FIELD, 7.2) },
-    metrix: { [IITTALA]: metrixLive([[nimi, heitot]]) }
+  const next = loadSite({
+    results: { [TEST_ACTIVE]: railwayResults(TEST_ACTIVE_FIELD, 7.2) },
+    metrix: { [TEST_NEXT]: metrixLive([[nimi, heitot]]) }
   });
-  await iittala.run('fetchAllCompetitionResults()');
-  await iittala.run('fetchCurrentCompLiveResults()');
-  const hcIittala = iittala.get(`liveResultsByComp[${IITTALA}][${JSON.stringify(nimi)}].hcScore`);
+  await next.run('fetchAllCompetitionResults()');
+  await next.run('fetchCurrentCompLiveResults()');
+  const hcNext = next.get(`liveResultsByComp[${TEST_NEXT}][${JSON.stringify(nimi)}].hcScore`);
 
-  assert.notEqual(hcKantola, hcIittala, 'radan crv:n pitää vaikuttaa');
-  assert.ok(hcKantola < hcIittala, 'matalampi crv → suurempi HC → pienempi HC-tulos');
+  assert.notEqual(hcActive, hcNext, 'radan crv:n pitää vaikuttaa');
+  assert.ok(hcActive < hcNext, 'matalampi crv → suurempi HC → pienempi HC-tulos');
 });
 
 test('yhden kisan live-tulokset eivät vuoda toiseen kisaan', async () => {
   const site = loadSite({
-    results: { [KANTOLA]: railwayResults(KANTOLA_FIELD, 7.2) },
-    metrix: { [IITTALA]: metrixLive([['Tomi S', 71]]) }
+    results: { [TEST_ACTIVE]: railwayResults(TEST_ACTIVE_FIELD, 7.2) },
+    metrix: { [TEST_NEXT]: metrixLive([['Tomi S', 71]]) }
   });
   await site.run('fetchAllCompetitionResults()');
   await site.run('fetchCurrentCompLiveResults()');
 
   const avaimet = Array.from(site.get('Object.keys(liveResultsByComp)'));
-  assert.deepEqual(avaimet, [String(IITTALA)], 'vain esillä olevan kisan tulokset');
+  assert.deepEqual(avaimet, [String(TEST_NEXT)], 'vain esillä olevan kisan tulokset');
 });
 
 test('Metrixin DNF-merkintä ilman tulosta tulkitaan keskeytykseksi', async () => {
-  const site = loadSite({ metrix: { [KANTOLA]: metrixLive([['Tomi S', 0, '1']]) } });
+  const site = loadSite({ metrix: { [TEST_ACTIVE]: metrixLive([['Tomi S', 0, '1']]) } });
   await site.run('fetchCurrentCompLiveResults()');
 
-  const rivi = site.get(`liveResultsByComp[${KANTOLA}]['Tomi S']`);
+  const rivi = site.get(`liveResultsByComp[${TEST_ACTIVE}]['Tomi S']`);
   assert.equal(rivi.dnf, true);
   assert.equal(rivi.throws, null);
   assert.equal(rivi.hcScore, null);
@@ -111,10 +113,10 @@ test('Metrixin DNF-merkintä ilman tulosta tulkitaan keskeytykseksi', async () =
 
 test('DNF-merkintä ei kumoa kelvollista tulosta', async () => {
   // Metrix merkitsee toisinaan DNF:n vaikka heitot on kirjattu — tulos ratkaisee.
-  const site = loadSite({ metrix: { [KANTOLA]: metrixLive([['Tomi S', 92, '1']]) } });
+  const site = loadSite({ metrix: { [TEST_ACTIVE]: metrixLive([['Tomi S', 92, '1']]) } });
   await site.run('fetchCurrentCompLiveResults()');
 
-  const rivi = site.get(`liveResultsByComp[${KANTOLA}]['Tomi S']`);
+  const rivi = site.get(`liveResultsByComp[${TEST_ACTIVE}]['Tomi S']`);
   assert.equal(rivi.dnf, false, 'kirjattu tulos voittaa DNF-lipun');
   assert.equal(rivi.throws, 92);
   assert.ok(rivi.hcScore > 0, 'HC-tulos lasketaan normaalisti');

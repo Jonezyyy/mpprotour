@@ -46,6 +46,37 @@ function metrixLive(rows) {
   };
 }
 
+// Synteettiset testikilpailut: elävä COMPETITIONS-taulukko muuttuu aina kun
+// joku osakilpailu suljetaan tai uusi lisätään, joten testit eivät voi nojata
+// siihen mikä kilpailu sattuu juuri nyt olemaan 'active'/'next' data.js:ssä.
+// loadSite() korvaa kaikki ei-vielä-päättyneet kilpailut näillä kahdella —
+// jäädytetyt ('over') kilpailut jätetään koskemattomiksi, koska esim.
+// ratingien fallback-logiikka ja arkistotestit nojaavat oikeaan historiaan.
+const TEST_ACTIVE = 9000001;
+const TEST_NEXT = 9000002;
+
+const TEST_ACTIVE_FIELD = [
+  ['Jukka Vesa', 933, 72], ['Antti Karjakin', 861, 79], ['Erno Ekebom', 846, 84],
+  ['Joonas Korpilaakso', 816, 86], ['Markus Kotiranta', 799, 89], ['Tomi S', 764, 92],
+  ['Tuomas Kotiranta', 738, 95], ['Viljami Julkunen', 739, 96], ['JB Poupon', 755, 94],
+  ['Petteri Stedt', 677, 101], ['Kari Tauriainen', 699, 99], ['Petri Haukka', 738, 97],
+  ['Wili Vuorinen', 645, 104], ['Jukka Autio', null, 88]
+];
+
+const TEST_NEXT_FIELD = TEST_ACTIVE_FIELD.filter(([n]) => n !== 'Jukka Autio')
+  .map(([n, r, t]) => [n, r, t - 20]);
+
+function makeTestComp(id, name, date, crv, registered) {
+  return {
+    state: name === 'Testikisa A' ? 'active' : 'next',
+    id, name, fullName: `Testikausi – ${name}`,
+    date, course: `${name} DiscGolfPark`, location: 'Testila',
+    par: 60, holes: 18, courseRatingValue: crv,
+    url: `https://discgolfmetrix.com/${id}`,
+    registered
+  };
+}
+
 /**
  * Rakentaa sivuston testikontekstin.
  * mocks = {
@@ -97,9 +128,25 @@ function loadSite(mocks = {}) {
   ctx.globalThis = ctx;
   vm.createContext(ctx);
 
-  for (const file of ['js/data.js', 'js/app.js']) {
-    vm.runInContext(fs.readFileSync(path.join(ROOT, file), 'utf8'), ctx, { filename: file });
-  }
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'js/data.js'), 'utf8'), ctx, { filename: 'js/data.js' });
+
+  // Korvaa data.js:n senhetkiset ei-vielä-päättyneet kilpailut kahdella
+  // synteettisellä testikilpailulla (ks. kommentti TEST_ACTIVE/TEST_NEXT:n
+  // kohdalla) — jäädytetyt ('over') kilpailut säilyvät sellaisenaan.
+  const testActiveComp = makeTestComp(TEST_ACTIVE, 'Testikisa A', '2026-09-01', 7.09,
+    TEST_ACTIVE_FIELD.map(([n]) => n));
+  const testNextComp = makeTestComp(TEST_NEXT, 'Testikisa B', '2026-09-02', 11,
+    TEST_NEXT_FIELD.map(([n]) => n));
+  vm.runInContext(
+    `(() => {
+      const kept = COMPETITIONS.filter(c => c.state === 'over');
+      COMPETITIONS.length = 0;
+      COMPETITIONS.push(...kept, ${JSON.stringify(testActiveComp)}, ${JSON.stringify(testNextComp)});
+    })();`,
+    ctx
+  );
+
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'js/app.js'), 'utf8'), ctx, { filename: 'js/app.js' });
 
   // overComps/currentComp ovat let-sidoksia → näkyvät vain runInContextin kautta.
   const get = (expr) => vm.runInContext(expr, ctx);
@@ -116,22 +163,7 @@ function loadSite(mocks = {}) {
   };
 }
 
-// Kauden 2026 kaksi viimeistä osakilpailua
-const KANTOLA = 3743534;
-const IITTALA = 3743540;
-
-const KANTOLA_FIELD = [
-  ['Jukka Vesa', 933, 72], ['Antti Karjakin', 861, 79], ['Erno Ekebom', 846, 84],
-  ['Joonas Korpilaakso', 816, 86], ['Markus Kotiranta', 799, 89], ['Tomi S', 764, 92],
-  ['Tuomas Kotiranta', 738, 95], ['Viljami Julkunen', 739, 96], ['JB Poupon', 755, 94],
-  ['Petteri Stedt', 677, 101], ['Kari Tauriainen', 699, 99], ['Petri Haukka', 738, 97],
-  ['Wili Vuorinen', 645, 104], ['Jukka Autio', null, 88]
-];
-
-const IITTALA_FIELD = KANTOLA_FIELD.filter(([n]) => n !== 'Jukka Autio')
-  .map(([n, r, t]) => [n, r, t - 20]);
-
 module.exports = {
   loadSite, railwayResults, metrixLive,
-  KANTOLA, IITTALA, KANTOLA_FIELD, IITTALA_FIELD
+  TEST_ACTIVE, TEST_NEXT, TEST_ACTIVE_FIELD, TEST_NEXT_FIELD
 };
