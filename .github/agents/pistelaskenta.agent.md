@@ -1,5 +1,5 @@
 ---
-description: "Use when: calculating HC scores, season points, standings, tie-breaking, mullit, place rankings, POINTS_TABLE, scoring bugs, adding competition results, verifying calcEventPoints, calcRoundedResults, buildStandings logic in Miesperhe Pro Tour"
+description: "Use when: calculating HC scores, season points, standings, tie-breaking, place rankings, POINTS_TABLE, scoring bugs, adding competition results, verifying calcEventPoints, calcRoundedResults, buildStandings logic in Miesperhe Pro Tour"
 tools: [read, search, edit]
 name: "Pistelaskenta-agentti"
 ---
@@ -14,11 +14,6 @@ hcScore = throws - (1000 - rating) / crv
 - `throws`: pelaajan bruttoheitot
 - `rating`: Metrix-rating (PLAYER_RATINGS tai kilpailun res.rating)
 - `crv`: radan arvo (`comp.courseRatingValue`)
-
-**Mullit (tuleva kilpailu, ei vielä pelattu):**
-```js
-mullit = Math.max(0, Math.ceil((1000 - rating) / crv / 6))
-```
 
 **Sijoituslaskenta (pyöristys ennen vertailua):**
 ```js
@@ -44,7 +39,7 @@ POINTS_TABLE = [100, 90, 82, 74, 67, 60, 54, 48, 42, 36, 30, 24, 18, 12, 6]
 
 - `'over'` — päättynyt; tulokset `comp.results[]`-taulukossa
 - `'active'` — käynnissä; tulokset haetaan live Metrix-APIn kautta
-- `'next'` — tulossa; näytetään vain mullit-esikatselu
+- `'next'` — tulossa; näytetään vain par-esikatselu
 
 ## Kilpailun results-rakenne (data.js)
 

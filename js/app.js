@@ -699,14 +699,10 @@ function renderCurrentComp() {
     const dnf = res ? res.dnf : false;
     const throws = (res && !res.dnf) ? res.throws : null;
     const hcScore = (res && res.hcScore != null) ? res.hcScore : null;
-    // Mullit shown when player hasn't played yet (both active and next states)
-    const mullit = (!played && rating && crv)
-      ? Math.max(0, Math.ceil((1000 - rating) / crv / 6))
-      : null;
     const parScore = (!played && rating && crv && comp.par != null)
       ? Math.round(comp.par + (1000 - rating) / crv)
       : null;
-    return { name, rating, rated: knownRating !== null, throws, dnf, played, hcScore, mullit, parScore };
+    return { name, rating, rated: knownRating !== null, throws, dnf, played, hcScore, parScore };
   });
 
   if (isActive) {
@@ -764,7 +760,6 @@ function renderCurrentComp() {
 
   const renderWaitingRow = (p) => {
     const ratingTxt = ratingLabel(p);
-    const mullitNum = p.mullit > 0 ? String(p.mullit) : '—';
     let parScoreHtml = '';
     if (p.parScore != null) {
       parScoreHtml = `${p.parScore}`;
@@ -779,7 +774,6 @@ function renderCurrentComp() {
     return `<li class="next-player next-player--waiting${p.parScore != null ? ' has-par-score' : ''}">
       <span class="next-player-waiting-dot"></span>
       <div class="next-player-info"><button class="player-btn" data-player="${p.name}">${p.name}</button>${ratingTxt ? `<span class="next-player-rating">${ratingTxt}</span>` : ''}</div>
-      <span class="next-player-mullit-num">${mullitNum}</span>
       <span class="next-player-par-score">${parScoreHtml}</span>
       <span class="next-player-beat">${targetHtml}</span>
     </li>`;
@@ -796,11 +790,11 @@ function renderCurrentComp() {
       playerList += `<li class="next-player-divider"></li>`;
     }
     const waitingLabel = isActive && playedPlayers.length > 0 ? 'Ei vielä pelannut' : 'Ilmoittautuneet';
-    const showCols = waitingPlayers.some(p => p.mullit !== null || p.parScore !== null);
+    const showCols = waitingPlayers.some(p => p.parScore !== null);
     playerList += `<li class="next-player-section-label">${waitingLabel}</li>`;
     if (showCols) {
       const showParScore = waitingPlayers.some(p => p.parScore != null);
-      playerList += `<li class="next-player-col-header${showParScore ? ' next-player-col-header--with-par' : ''}"><span></span><span class="next-player-col-name"></span><span class="next-player-col-mullit">Mullit</span>${showParScore ? '<span class="next-player-col-par-score">Par HC</span>' : ''}<span class="next-player-col-beat">Score to beat</span></li>`;
+      playerList += `<li class="next-player-col-header${showParScore ? ' next-player-col-header--with-par' : ''}"><span></span><span class="next-player-col-name"></span>${showParScore ? '<span class="next-player-col-par-score">Par HC</span>' : ''}<span class="next-player-col-beat">Score to beat</span></li>`;
     }
     playerList += waitingPlayers.map(p => renderWaitingRow(p)).join('');
   }

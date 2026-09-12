@@ -23,7 +23,7 @@ Jokaisella `COMPETITIONS`-kohteella on yksi kolmesta tilasta:
 
 - `'over'` — päättynyt, tulokset `comp.results[]`-taulussa, lasketaan kausipisteisiin
 - `'active'` — käynnissä, tulokset haetaan livenä Metrixistä backendin kautta
-- `'next'` — tulossa, näytetään vain mullit-ennakko
+- `'next'` — tulossa, näytetään vain par-ennakko
 
 ## Ydinkaavat — ÄLÄ MUUTA ilman lupaa
 
@@ -32,9 +32,6 @@ Nämä ovat kanonisia. Jos haluat muuttaa, varmista käyttäjältä ensin.
 ```js
 // HC-tulos
 hcScore = throws - (1000 - rating) / crv
-
-// Mullit (ennen pelaamista)
-mullit = Math.max(0, Math.ceil((1000 - rating) / crv / 6))
 
 // Sijoitus kilpailussa (pyöristetty HC)
 rounded = Math.round(hcScore)
