@@ -33,9 +33,8 @@ const PLAYER_RATINGS = {
 // over   = päättynyt, lasketaan kausipisteisiin
 // next   = tulossa (id tai courseRatingValue voi puuttua)
 const COMPETITIONS = [
-  // ── Käynnissä ──────────────────────────────────────────────────────────
   {
-    state: 'active',
+    state: 'over',
     id: 3743534,
     name: 'Kantola',
     fullName: 'MP Pro Tour 2026 – Kantola',
@@ -45,30 +44,26 @@ const COMPETITIONS = [
     par: 66,
     holes: 18,
     courseRatingValue: 7.09,
-    registrationEnd: '2026-08-22',
     url: 'https://discgolfmetrix.com/3743534',
-    registerUrl: 'https://discgolfmetrix.com/?u=register_add&ID=3743534',
-    registered: [
-      'Jukka Autio',
-      'Wili Vuorinen',
-      'Erno Ekebom',
-      'JB Poupon',
-      'Joonas Korpilaakso',
-      'Viljami Julkunen',
-      'Petri Haukka',
-      'Antti Karjakin',
-      'Petteri Stedt',
-      'Tomi S',
-      'Markus Kotiranta',
-      'Tuomas Kotiranta',
-      'Kari Tauriainen',
-      'Jukka Vesa'
+    results: [
+      { place:  1, name: 'Tomi S',             rating: 768, throws:  83, hc: 32.72, hcScore: 50.28 },
+      { place:  2, name: 'Petteri Stedt',      rating: 677, throws:  99, hc: 45.56, hcScore: 53.44 },
+      { place:  3, name: 'Erno Ekebom',        rating: 846, throws:  78, hc: 21.72, hcScore: 56.28 },
+      { place:  3, name: 'Antti Karjakin',     rating: 861, throws:  76, hc: 19.61, hcScore: 56.39 },
+      { place:  5, name: 'Tuomas Kotiranta',   rating: 746, throws:  93, hc: 35.83, hcScore: 57.17 },
+      { place:  6, name: 'Kari Tauriainen',    rating: 701, throws: 100, hc: 42.17, hcScore: 57.83 },
+      { place:  6, name: 'Joonas Korpilaakso', rating: 816, throws:  84, hc: 25.95, hcScore: 58.05 },
+      { place:  6, name: 'JB Poupon',          rating: 755, throws:  93, hc: 34.56, hcScore: 58.44 },
+      { place:  9, name: 'Viljami Julkunen',   rating: 739, throws:  97, hc: 36.81, hcScore: 60.19 },
+      { place: 10, name: 'Jukka Vesa',         rating: 935, throws:  70, hc:  9.17, hcScore: 60.83 },
+      { place: 11, name: 'Markus Kotiranta',   rating: 805, throws:  92, hc: 27.51, hcScore: 64.49 },
+      { place: 12, name: 'Petri Haukka',       rating: 732, throws: 103, hc: 37.80, hcScore: 65.20 },
+      { place: null, name: 'Jukka Autio',      rating: 662, throws: null, hc: null, hcScore: null },
+      { place: null, name: 'Wili Vuorinen',    rating: 637, throws: null, hc: null, hcScore: null },
     ]
   },
-
-  // ── Tulossa ────────────────────────────────────────────────────────────
   {
-    state: 'next',
+    state: 'over',
     id: 3743540,
     name: 'Iittala',
     fullName: 'MP Pro Tour 2026 – Iittala',
@@ -78,22 +73,48 @@ const COMPETITIONS = [
     par: 56,
     holes: 18,
     courseRatingValue: 11,
-    registrationEnd: '2026-08-22',
     url: 'https://discgolfmetrix.com/3743540',
-    registerUrl: 'https://discgolfmetrix.com/?u=register_add&ID=3743540',
+    results: [
+      { place:  1, name: 'Viljami Julkunen',   rating: 739, throws: 64, hc: 23.73, hcScore: 40.27 },
+      { place:  2, name: 'Petteri Stedt',      rating: 677, throws: 70, hc: 29.36, hcScore: 40.64 },
+      { place:  2, name: 'Tomi S',             rating: 768, throws: 62, hc: 21.09, hcScore: 40.91 },
+      { place:  4, name: 'Tuomas Kotiranta',   rating: 746, throws: 65, hc: 23.09, hcScore: 41.91 },
+      { place:  4, name: 'Markus Kotiranta',   rating: 805, throws: 60, hc: 17.73, hcScore: 42.27 },
+      { place:  6, name: 'Petri Haukka',       rating: 732, throws: 68, hc: 24.36, hcScore: 43.64 },
+      { place:  6, name: 'Erno Ekebom',        rating: 846, throws: 58, hc: 14.00, hcScore: 44.00 },
+      { place:  6, name: 'Joonas Korpilaakso', rating: 816, throws: 61, hc: 16.73, hcScore: 44.27 },
+      { place:  9, name: 'Antti Karjakin',     rating: 861, throws: 58, hc: 12.64, hcScore: 45.36 },
+      { place: 10, name: 'JB Poupon',          rating: 755, throws: 68, hc: 22.27, hcScore: 45.73 },
+      { place: 11, name: 'Jukka Vesa',         rating: 935, throws: 53, hc:  5.91, hcScore: 47.09 },
+      { place: 12, name: 'Kari Tauriainen',    rating: 701, throws: 81, hc: 27.18, hcScore: 53.82 },
+      { place: null, name: 'Wili Vuorinen',    rating: 637, throws: null, hc: null, hcScore: null },
+    ]
+  },
+
+  // ── Tulossa ────────────────────────────────────────────────────────────
+  {
+    state: 'next',
+    id: 3779894,
+    name: 'Sibbe',
+    fullName: 'MP Pro Tour 2027 – Sibbe Blue',
+    date: '2026-09-30',
+    course: 'Sibbe Disc Golf → Blue 2026',
+    location: 'Sipoo, Uusimaa',
+    par: 59,
+    holes: 18,
+    courseRatingValue: 9.81,
+    registrationEnd: '2026-09-30',
+    url: 'https://discgolfmetrix.com/3779894',
+    registerUrl: 'https://discgolfmetrix.com/?u=register_add&ID=3779894',
     registered: [
-      'Wili Vuorinen',
-      'Erno Ekebom',
-      'JB Poupon',
-      'Joonas Korpilaakso',
-      'Viljami Julkunen',
-      'Petri Haukka',
-      'Antti Karjakin',
-      'Petteri Stedt',
-      'Tomi S',
       'Markus Kotiranta',
       'Tuomas Kotiranta',
+      'Erno Ekebom',
+      'Tomi S',
+      'Antti Karjakin',
       'Kari Tauriainen',
+      'Petri Haukka',
+      'Viljami Julkunen',
       'Jukka Vesa'
     ]
   },
