@@ -197,6 +197,17 @@ function renderHeroStats() {
 function renderStandings() {
   const container = document.getElementById('standings-container');
   if (!container) return;
+
+  // Kauden alussa ei ole vielä yhtään pelattua osakilpailua — tyhjä taulukko
+  // pelkkien otsikoiden kanssa näyttäisi rikkinäiseltä.
+  if (overComps.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:2rem 0">Kausi ei ole vielä alkanut — ei pelattuja osakilpailuja.</p>';
+    const badge = document.getElementById('season-progress');
+    if (badge) badge.textContent = `0 / ${TOTAL_EVENTS}`;
+    const sub = document.getElementById('hero-subtitle');
+    if (sub) sub.textContent = `0 / ${TOTAL_EVENTS} osakilpailua pelattu`;
+    return;
+  }
   // Otsikkorivi kilpailujen mukaan
   const compHeaders = overComps.map(c =>
     `<th class="pts-col">${c.name}</th>`

@@ -7,12 +7,12 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
   loadSite, railwayResults, metrixLive,
-  TEST_ACTIVE, TEST_NEXT, TEST_ACTIVE_FIELD, TEST_NEXT_FIELD
+  TEST_ACTIVE, TEST_NEXT, TEST_OVER_2, TEST_ACTIVE_FIELD, TEST_NEXT_FIELD
 } = require('./support');
 
-// loadSite() korvaa data.js:n avoimet kilpailut näillä kahdella (ks. support.js);
-// jäädytetyt kaudet 2025-2026 (8 kpl) pysyvät koskemattomina overComps:ssa.
-const PLAYED = ['Talma', 'Nummelanharju', 'Meilahti', 'Röyläntupa x2', 'Nummenmäki', 'Ford SIN', 'Kantola', 'Iittala'];
+// loadSite() korvaa KOKO COMPETITIONS-taulukon synteettisellä testikaudella
+// (ks. support.js): kaksi päättynyttä, yksi käynnissä, yksi tulossa.
+const PLAYED = ['Testikausi 1', 'Testikausi 2'];
 
 const activeOhi = () => railwayResults(TEST_ACTIVE_FIELD, 7.2);
 const nextOhi = () => railwayResults(TEST_NEXT_FIELD, 11.4);
@@ -90,12 +90,12 @@ test('kilpailut sulkeutuvat toisistaan riippumatta', async () => {
 });
 
 test('päättynyttä kilpailua ei avata uudelleen', async () => {
-  // Ford SIN on data.js:ssä 'over'. Vaikka backend vastaisi "ei valmis",
+  // Testikausi 2 on jo 'over'. Vaikka backend vastaisi "ei valmis",
   // sitä ei saa palauttaa käynnissä olevaksi.
-  const site = loadSite({ results: { 3683940: railwayResults([], null, false) } });
+  const site = loadSite({ results: { [TEST_OVER_2]: railwayResults([], null, false) } });
   await site.run('fetchAllCompetitionResults()');
 
-  assert.ok(site.compNames().includes('Ford SIN'));
+  assert.ok(site.compNames().includes('Testikausi 2'));
   assert.equal(site.current().name, 'Testikisa A');
 });
 
@@ -113,7 +113,7 @@ test('kauden viimeisen kisan jälkeen näytetään kausi päättyneeksi', async 
   await site.run('fetchAllCompetitionResults()');
 
   assert.equal(site.current(), null, 'ei enää näytettävää kilpailua');
-  // Kaikki (8 jäädytettyä + 2 juuri sulkeutunutta testikisaa) ovat nyt overComps:ssa.
+  // Kaikki (2 aiemmin päättynyttä + 2 juuri sulkeutunutta) ovat nyt overComps:ssa.
   assert.equal(site.get('overComps.length'), PLAYED.length + 2);
 
   site.get('renderCurrentComp()');

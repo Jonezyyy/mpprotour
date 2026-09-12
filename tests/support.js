@@ -47,13 +47,15 @@ function metrixLive(rows) {
 }
 
 // Synteettiset testikilpailut: elävä COMPETITIONS-taulukko muuttuu aina kun
-// joku osakilpailu suljetaan tai uusi lisätään, joten testit eivät voi nojata
-// siihen mikä kilpailu sattuu juuri nyt olemaan 'active'/'next' data.js:ssä.
-// loadSite() korvaa kaikki ei-vielä-päättyneet kilpailut näillä kahdella —
-// jäädytetyt ('over') kilpailut jätetään koskemattomiksi, koska esim.
-// ratingien fallback-logiikka ja arkistotestit nojaavat oikeaan historiaan.
+// osakilpailu suljetaan, uusi lisätään tai kausi vaihtuu, joten testit eivät voi
+// nojata siihen mitä data.js:ssä sattuu juuri nyt olemaan. loadSite() korvaa
+// KOKO COMPETITIONS-taulukon näillä neljällä: kaksi päättynyttä, yksi käynnissä
+// ja yksi tulossa. Arkistotestit käyttävät COMPETITIONS_2026:ta, joka on
+// jäädytettyä historiaa eikä muutu kausien mukana.
 const TEST_ACTIVE = 9000001;
 const TEST_NEXT = 9000002;
+const TEST_OVER_1 = 9000010;
+const TEST_OVER_2 = 9000011;
 
 const TEST_ACTIVE_FIELD = [
   ['Jukka Vesa', 933, 72], ['Antti Karjakin', 861, 79], ['Erno Ekebom', 846, 84],
@@ -65,6 +67,23 @@ const TEST_ACTIVE_FIELD = [
 
 const TEST_NEXT_FIELD = TEST_ACTIVE_FIELD.filter(([n]) => n !== 'Jukka Autio')
   .map(([n, r, t]) => [n, r, t - 20]);
+
+// Päättynyt testikisa: tulokset lasketaan kentästä, jotta ratingien
+// fallback-ketju (metrixData -> overComps.results -> PLAYER_RATINGS) on testattavissa.
+function makeTestOverComp(id, name, date, crv, field) {
+  return {
+    state: 'over',
+    id, name, fullName: `Testikausi – ${name}`,
+    date, course: `${name} DiscGolfPark`, location: 'Testila',
+    par: 60, holes: 18, courseRatingValue: crv,
+    url: `https://discgolfmetrix.com/${id}`,
+    results: field.map(([n, r, t]) => {
+      if (r === null) return { name: n, rating: 0, throws: t, hc: 0, hcScore: t };
+      const hc = (1000 - r) / crv;
+      return { name: n, rating: r, throws: t, hc, hcScore: t - hc };
+    })
+  };
+}
 
 function makeTestComp(id, name, date, crv, registered) {
   return {
@@ -130,18 +149,20 @@ function loadSite(mocks = {}) {
 
   vm.runInContext(fs.readFileSync(path.join(ROOT, 'js/data.js'), 'utf8'), ctx, { filename: 'js/data.js' });
 
-  // Korvaa data.js:n senhetkiset ei-vielä-päättyneet kilpailut kahdella
-  // synteettisellä testikilpailulla (ks. kommentti TEST_ACTIVE/TEST_NEXT:n
-  // kohdalla) — jäädytetyt ('over') kilpailut säilyvät sellaisenaan.
-  const testActiveComp = makeTestComp(TEST_ACTIVE, 'Testikisa A', '2026-09-01', 7.09,
-    TEST_ACTIVE_FIELD.map(([n]) => n));
-  const testNextComp = makeTestComp(TEST_NEXT, 'Testikisa B', '2026-09-02', 11,
-    TEST_NEXT_FIELD.map(([n]) => n));
+  // Korvaa KOKO COMPETITIONS synteettisellä testikaudella, jotta testit eivät
+  // riipu siitä mitä kilpailuja data.js:ssä sillä hetkellä on.
+  const comps = [
+    makeTestOverComp(TEST_OVER_1, 'Testikausi 1', '2026-06-01', 9.5, TEST_ACTIVE_FIELD),
+    makeTestOverComp(TEST_OVER_2, 'Testikausi 2', '2026-07-01', 10.5, TEST_NEXT_FIELD),
+    makeTestComp(TEST_ACTIVE, 'Testikisa A', '2026-09-01', 7.09,
+      TEST_ACTIVE_FIELD.map(([n]) => n)),
+    makeTestComp(TEST_NEXT, 'Testikisa B', '2026-09-02', 11,
+      TEST_NEXT_FIELD.map(([n]) => n))
+  ];
   vm.runInContext(
     `(() => {
-      const kept = COMPETITIONS.filter(c => c.state === 'over');
       COMPETITIONS.length = 0;
-      COMPETITIONS.push(...kept, ${JSON.stringify(testActiveComp)}, ${JSON.stringify(testNextComp)});
+      COMPETITIONS.push(...${JSON.stringify(comps)});
     })();`,
     ctx
   );
@@ -165,5 +186,5 @@ function loadSite(mocks = {}) {
 
 module.exports = {
   loadSite, railwayResults, metrixLive,
-  TEST_ACTIVE, TEST_NEXT, TEST_ACTIVE_FIELD, TEST_NEXT_FIELD
+  TEST_ACTIVE, TEST_NEXT, TEST_OVER_1, TEST_OVER_2, TEST_ACTIVE_FIELD, TEST_NEXT_FIELD
 };

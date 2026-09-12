@@ -14,7 +14,8 @@ const comps2025 = () => site.get('JSON.parse(JSON.stringify(COMPETITIONS_2025))'
 test('kausi 2026 on arkistoitu kokonaisuudessaan', () => {
   const comps = comps2026();
   assert.equal(comps.length, 8);
-  assert.equal(comps.length, site.get('TOTAL_EVENTS'));
+  // Ei sidota nykyiseen TOTAL_EVENTS:iin — arkisto on jo löyty lukkoon.
+  assert.equal(comps.length, 8);
   for (const c of comps) {
     assert.ok(c.results.length > 0, `${c.name}: ei tuloksia`);
     assert.ok(c.courseRatingValue > 0, `${c.name}: crv puuttuu`);
