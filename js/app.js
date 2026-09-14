@@ -578,10 +578,16 @@ function renderCompetitions() {
 
 // --- Renderöinti: Nykyinen kilpailu ---
 
+// Käynnissä olevan osakilpailun Metrix-ratingit. Metrix lisää WeeklyHC:hen rivin
+// (Rating, HC) heti kun pelaajan kierros on kirjattu, joten nämä ovat tuoreimmat
+// saatavilla olevat ratingit — uudempia kuin yksikään päättynyt kisa.
+const liveRatings = {};
+
 // Palauttaa null jos ratingia ei löydy mistään — kutsuja päättää mitä tekee.
 function lookupPlayerRating(name) {
-  // Tuorein Metrix-rating voittaa, jotta ratingit päivittyvät itsestään kun
-  // osakilpailu sulkeutuu. PLAYER_RATINGS on varalla niille joilta Metrix-rating puuttuu.
+  // Tuorein Metrix-rating voittaa: ensin käynnissä oleva kisa, sitten päättyneet
+  // uusimmasta vanhimpaan. PLAYER_RATINGS on varalla niille joilta Metrix-rating puuttuu.
+  if (liveRatings[name]) return liveRatings[name];
   const md = metrixData[name];
   if (md) {
     const latestId = overComps.slice().reverse().map(c => c.id).find(id => md[id]);
@@ -617,6 +623,12 @@ async function fetchCurrentCompLiveResults() {
     const data = await res.json();
     if (!data.Competition) return;
     const crv = comp.courseRatingValue;
+    // Ratingit ensin, jotta tämän kisan HC-tulokset lasketaan niillä eikä vanhoilla.
+    // Rating 0 = Metrixillä ei ole pelaajalle ratingia → ei ylikirjoiteta tunnettua.
+    (data.Competition.WeeklyHC || []).forEach(e => {
+      const rating = parseInt(e.Rating, 10);
+      if (e.Name && rating > 0) liveRatings[e.Name] = rating;
+    });
     const live = {};
     (data.Competition.Results || []).forEach(r => {
       const throws = parseInt(r.Sum, 10);
@@ -682,13 +694,32 @@ function renderSeasonOver(container) {
   });
 }
 
+// Osakilpailu on pelattu mutta seuraavaa ei ole vielä lisätty — kausi jatkuu.
+function renderAwaitingNextComp(container) {
+  setCurrentCompHeading(null);
+  container.innerHTML = `
+    <div class="next-card">
+      <div class="next-card-header">
+        <span class="comp-badge">Seuraava osakilpailu</span>
+        <h3 class="comp-name">Julkaistaan pian</h3>
+        <div class="comp-meta">
+          <span>${overComps.length} / ${TOTAL_EVENTS} osakilpailua pelattu</span>
+        </div>
+        <div class="comp-info">
+          <span>Seuraava osakilpailu lisätään heti kun se on luotu Metrixiin.</span>
+        </div>
+      </div>
+    </div>`;
+}
+
 function renderCurrentComp() {
   const container = document.getElementById('next-event-container');
   if (!container) return;
 
   const comp = currentComp;
   if (!comp) {
-    renderSeasonOver(container);
+    if (overComps.length >= TOTAL_EVENTS) renderSeasonOver(container);
+    else renderAwaitingNextComp(container);
     return;
   }
   setCurrentCompHeading(null);
@@ -1093,10 +1124,20 @@ function initScrollReveal() {
 
 // --- Käynnistys ---
 
-// Metrix täyttää WeeklyHC:n vasta kun osakilpailu on päättynyt → se on "kisa ohi" -signaali.
-// Varmistus: suljetaan vasta kun vähintään tämä osuus pelaajista on saanut tuloksen,
-// jottei kesken kierroksen ilmestyvä WeeklyHC sulje kisaa liian aikaisin.
-const AUTOCLOSE_MIN_PLAYED_RATIO = 0.5;
+// Metrix täyttää WeeklyHC:n pelaaja kerrallaan heti kun kierros kirjataan, joten
+// backendin `completed` on tosi jo ensimmäisen tuloksen jälkeen (todettu Sibbessä
+// 2026). Kuukauden mittainen osakilpailu suljetaan siksi vasta kun kaikki
+// ilmoittautuneet ovat pelanneet tai kilpailun viimeinen päivä on ohi.
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function isReadyToClose(comp, players) {
+  const allPlayed = players.every(p => p.throws > 0);
+  const datePassed = !!comp.date && todayISO() > comp.date;
+  return allPlayed || datePassed;
+}
 
 async function fetchAllCompetitionResults() {
   // Käydään läpi kaikki kilpailut joilla on Metrix-id: päättyneiden tulokset
@@ -1116,10 +1157,7 @@ async function fetchAllCompetitionResults() {
       const crv = metrixCrv || comp.courseRatingValue;
       if (!crv) return;
 
-      if (comp.state !== 'over') {
-        const played = data.players.filter(p => p.throws > 0).length;
-        if (played < data.players.length * AUTOCLOSE_MIN_PLAYED_RATIO) return;
-      }
+      if (comp.state !== 'over' && !isReadyToClose(comp, data.players)) return;
 
       comp.results = data.players.map(p => {
         if (p.dnf || p.throws === null || !(p.throws > 0)) {

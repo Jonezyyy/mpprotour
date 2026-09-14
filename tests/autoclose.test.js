@@ -7,7 +7,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
   loadSite, railwayResults, metrixLive,
-  TEST_ACTIVE, TEST_NEXT, TEST_OVER_2, TEST_ACTIVE_FIELD, TEST_NEXT_FIELD
+  TEST_ACTIVE, TEST_NEXT, TEST_OVER_1, TEST_OVER_2, TEST_ACTIVE_FIELD, TEST_NEXT_FIELD
 } = require('./support');
 
 // loadSite() korvaa KOKO COMPETITIONS-taulukon synteettisellä testikaudella
@@ -25,15 +25,34 @@ test('kesken oleva kilpailu pysyy esillä kun Metrix ei ilmoita sitä valmiiksi'
   assert.equal(site.current().name, 'Testikisa A');
 });
 
-test('kilpailu ei sulkeudu kesken kierroksen vaikka Metrix ilmoittaisi sen valmiiksi', async () => {
-  // Varmistus sen varalta että WeeklyHC ilmestyy ennen kuin kaikki ovat maalissa:
-  // 3/14 tulosta ei riitä sulkemiseen (AUTOCLOSE_MIN_PLAYED_RATIO).
-  const kesken = TEST_ACTIVE_FIELD.map(([n, r, t], i) => [n, r, i < 3 ? t : null]);
-  const site = loadSite({ results: { [TEST_ACTIVE]: railwayResults(kesken, 7.2) } });
+const kesken3 = () => railwayResults(
+  TEST_ACTIVE_FIELD.map(([n, r, t], i) => [n, r, i < 3 ? t : null]), 7.2);
+
+test('kilpailu ei sulkeudu kesken kuukauden vaikka Metrix ilmoittaisi sen valmiiksi', async () => {
+  // Metrix täyttää WeeklyHC:n heti ensimmäisen kierroksen jälkeen, joten backend
+  // sanoo "completed". 3/14 pelannut ja viimeinen päivä edessä → pysyy auki.
+  const site = loadSite({ results: { [TEST_ACTIVE]: kesken3() } });
   await site.run('fetchAllCompetitionResults()');
 
   assert.equal(site.current().name, 'Testikisa A', 'kisan pitää yhä olla esillä');
   assert.ok(!site.compNames().includes('Testikisa A'), 'kisa ei saa vielä olla tuloksissa');
+});
+
+test('kilpailu pysyy auki vielä viimeisenä päivänään', async () => {
+  const site = loadSite({ results: { [TEST_ACTIVE]: kesken3() }, today: '2026-09-01' });
+  await site.run('fetchAllCompetitionResults()');
+
+  assert.equal(site.current().name, 'Testikisa A');
+});
+
+test('kilpailu sulkeutuu kun viimeinen päivä on ohi, vaikka kaikki eivät pelanneet', async () => {
+  const site = loadSite({ results: { [TEST_ACTIVE]: kesken3() }, today: '2026-09-02' });
+  await site.run('fetchAllCompetitionResults()');
+
+  assert.ok(site.compNames().includes('Testikisa A'));
+  assert.equal(site.current().name, 'Testikisa B');
+  const pelaamatta = site.comp(TEST_ACTIVE).results.filter(r => r.hcScore === null).length;
+  assert.equal(pelaamatta, 11, 'pelaamattomat jäävät ilman tulosta');
 });
 
 test('valmis kilpailu siirtyy tuloksiin ja seuraava nousee esiin', async () => {
@@ -110,14 +129,33 @@ test('backendin ollessa alhaalla tila pysyy data.js:n mukaisena', async () => {
 
 test('kauden viimeisen kisan jälkeen näytetään kausi päättyneeksi', async () => {
   const site = loadSite({ results: { [TEST_ACTIVE]: activeOhi(), [TEST_NEXT]: nextOhi() } });
+  // Täydennetään testikausi täyteen mittaan: 6 päättynyttä + 2 sulkeutuvaa = TOTAL_EVENTS.
+  site.get(`(() => {
+    const base = COMPETITIONS.find(c => c.id === ${TEST_OVER_1});
+    for (let i = 3; i <= 6; i++) {
+      COMPETITIONS.push({ ...base, id: 9000020 + i, name: 'Testikausi ' + i, date: '2026-05-0' + i });
+    }
+    recomputeCompStates();
+  })()`);
   await site.run('fetchAllCompetitionResults()');
 
   assert.equal(site.current(), null, 'ei enää näytettävää kilpailua');
-  // Kaikki (2 aiemmin päättynyttä + 2 juuri sulkeutunutta) ovat nyt overComps:ssa.
-  assert.equal(site.get('overComps.length'), PLAYED.length + 2);
+  assert.equal(site.get('overComps.length'), site.get('TOTAL_EVENTS'));
 
   site.get('renderCurrentComp()');
   assert.match(site.card(), /Kausi päättynyt/);
+});
+
+test('kausi ei pääty vaikka yhtään avointa kisaa ei ole, jos kisoja on vielä pelaamatta', async () => {
+  // Kävisi esim. kun kauden ensimmäinen kisa sulkeutuu ennen kuin toinen on lisätty.
+  const site = loadSite({ results: { [TEST_ACTIVE]: activeOhi(), [TEST_NEXT]: nextOhi() } });
+  await site.run('fetchAllCompetitionResults()');
+
+  assert.equal(site.current(), null);
+  site.get('renderCurrentComp()');
+  assert.doesNotMatch(site.card(), /Kausi päättynyt/);
+  assert.match(site.card(), /Julkaistaan pian/);
+  assert.match(site.card(), /4 \/ 8 osakilpailua pelattu/);
 });
 
 test('kesken oleva kisa merkitään käynnissä olevaksi heti kun tuloksia ilmestyy', async () => {

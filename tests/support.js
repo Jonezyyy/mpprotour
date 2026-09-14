@@ -35,13 +35,14 @@ function railwayResults(rows, crv, completed = true) {
 }
 
 // Metrixin live-vastaus. rivit: [nimi, summa, dnf] — summa 0 = ei vielä tulosta.
-function metrixLive(rows) {
+// weekly: [nimi, rating] — Metrix lisää rivin heti kun pelaajan kierros on kirjattu.
+function metrixLive(rows, weekly = []) {
   return {
     Competition: {
       Results: rows.map(([Name, Sum, DNF = null]) => ({
         Name, Sum: String(Sum), DNF, PlayerResults: []
       })),
-      WeeklyHC: []
+      WeeklyHC: weekly.map(([Name, Rating]) => ({ Name, Rating, HC: null }))
     }
   };
 }
@@ -101,12 +102,15 @@ function makeTestComp(id, name, date, crv, registered) {
  * mocks = {
  *   results:    { [compId]: railwayResults(...) },   // Railway /api/competition/:id/results
  *   metrix:     { [compId]: metrixLive(...) },       // discgolfmetrix.com/api.php
- *   registered: { [compId]: ['nimi', ...] }          // Railway /api/competition/:id
+ *   registered: { [compId]: ['nimi', ...] },         // Railway /api/competition/:id
+ *   today:      'YYYY-MM-DD'                         // "tämä päivä" sulkemislogiikalle
  * }
+ * today oletuksena 2026-08-15, eli ennen testikisojen päivämääriä: kisat ovat
+ * kesken ellei testi toisin määrää.
  * Kilpailu jota ei ole mockattu → haku epäonnistuu (= backend alhaalla).
  */
 function loadSite(mocks = {}) {
-  const { results = {}, metrix = {}, registered = {} } = mocks;
+  const { results = {}, metrix = {}, registered = {}, today = '2026-08-15' } = mocks;
 
   const calls = [];
   const fetchStub = async (url) => {
@@ -168,6 +172,8 @@ function loadSite(mocks = {}) {
   );
 
   vm.runInContext(fs.readFileSync(path.join(ROOT, 'js/app.js'), 'utf8'), ctx, { filename: 'js/app.js' });
+  // Kiinteä päivä: sulkemislogiikka ei saa riippua siitä milloin testit ajetaan.
+  vm.runInContext(`todayISO = () => ${JSON.stringify(today)};`, ctx);
 
   // overComps/currentComp ovat let-sidoksia → näkyvät vain runInContextin kautta.
   const get = (expr) => vm.runInContext(expr, ctx);

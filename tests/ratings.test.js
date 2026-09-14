@@ -13,6 +13,30 @@ const {
 const rating = (site, name) => site.get(`getPlayerRating(${JSON.stringify(name)})`);
 const known  = (site, name) => site.get(`lookupPlayerRating(${JSON.stringify(name)})`);
 
+test('käynnissä olevan kisan Metrix-rating voittaa päättyneiden kisojen ratingin', async () => {
+  // Metrix lisää WeeklyHC:hen ratingin heti kun kierros on kirjattu (Sibbe 2026:
+  // Viljami 749, kun viimeisin päättynyt kisa ja taulukko sanoivat 739).
+  const site = loadSite({
+    metrix: { [TEST_ACTIVE]: metrixLive([['Viljami Julkunen', 78]], [['Viljami Julkunen', 749]]) }
+  });
+  assert.equal(rating(site, 'Viljami Julkunen'), 739, 'lähtötilanne: vanha rating');
+
+  await site.run('fetchCurrentCompLiveResults()');
+  assert.equal(rating(site, 'Viljami Julkunen'), 749);
+
+  const live = site.get(`liveResultsByComp[${TEST_ACTIVE}]['Viljami Julkunen']`);
+  assert.ok(Math.abs(live.hcScore - (78 - (1000 - 749) / 7.09)) < 0.01, 'HC lasketaan tuoreella ratingilla');
+  assert.match(site.card(), /Rating 749/);
+});
+
+test('Metrixin rating 0 ei ylikirjoita tunnettua ratingia', async () => {
+  const site = loadSite({
+    metrix: { [TEST_ACTIVE]: metrixLive([['Tomi S', 80]], [['Tomi S', 0]]) }
+  });
+  await site.run('fetchCurrentCompLiveResults()');
+  assert.equal(rating(site, 'Tomi S'), 764);
+});
+
 test('rating tulee viimeisimmästä kilpailusta, ei PLAYER_RATINGS-taulukosta', async () => {
   // Testikisa A sulkeutuu ja antaa Tomi S:lle uuden ratingin 771.
   const kentta = TEST_ACTIVE_FIELD.map(([n, r, t]) => n === 'Tomi S' ? [n, 771, t] : [n, r, t]);
