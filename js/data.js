@@ -8,7 +8,9 @@ const POINTS_TABLE = [
   100, 90, 82, 74, 67, 60, 54, 48, 42, 36, 30, 24, 18, 12, 6
 ];
 
-// Ajantasaiset Metrix-ratingit pelaajittain (päivitetään manuaalisesti)
+// Varalla olevat ratingit. Sivusto käyttää ensisijaisesti Metrixin ratingeja
+// (käynnissä oleva kisa, sitten uusin päättynyt); tätä taulukkoa käytetään vain
+// pelaajille, joilta Metrix-ratingia ei löydy. Ks. lookupPlayerRating.
 const PLAYER_RATINGS = {
   'Jukka Vesa':         933,
   'Antti Karjakin':     861,

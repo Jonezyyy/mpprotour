@@ -93,7 +93,6 @@ Local preview at http://localhost:8000. It calls the live Railway backend and Me
 - Headless Chrome screenshots work through the Bash tool but fail through PowerShell.
 - Run Python scripts that edit Finnish text with `PYTHONUTF8=1`.
 - `.github/copilot-instructions.md` (Copilot) and `.github/agents/pistelaskenta.agent.md` (scoring agent) are Finnish counterparts of this file. When a rule here changes, update them too so the tools don't drift apart.
-- `mpprotour_hero.html` isn't referenced anywhere, and `grillme.skill` duplicates `.github/prompts/grillme.prompt.md`.
 
 ## Agent skills
 
