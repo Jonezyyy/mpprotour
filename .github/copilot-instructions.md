@@ -88,6 +88,25 @@ Rating haetaan tässä järjestyksessä (`lookupPlayerRating`):
 Metrixin `Rating: 0` = ei ratingia, ei ylikirjoita tunnettua ratingia. Omistajan sääntö:
 käytä aina viimeisimmän kilpailun antamaa ratingia.
 
+## Kuuma kierros
+
+Kierros on **kuuma**, kun se on pyöristettynä vähintään +40 pelaajan kierrosta edeltävän ratingin yli
+(`HOT_ROUND_MIN_POINTS`).
+
+```js
+roundRating = 1000 - (throws - layout.layout1000Result) * layout.ratingPerThrow
+pointsAbove = roundRating - kierrosta edeltävä rating
+```
+
+- **Vertailurating:** live-kortilla kierroksen oma `WeeklyHC.Rating` (`liveRatings`), päättyneissä
+  tuloksissa rivin `rating`. Ei koskaan varalla-ratingia.
+- **Ei arviota** (`roundRatingInfo` → `null`): ratingiton pelaaja, DNF tai rata ilman Metrix-ratinglinjaa.
+  Ei merkkiä, ei virhettä.
+- **Näkyy** oranssina `🔥 +NN` -merkkinä nimen perässä (`hotRoundBadge`), kierrosrating tooltipissä:
+  live-kortilla, päättyneissä tuloksissa ja arkistossa — ei kausitilanteessa.
+- **Kauden aikana** lasketaan nykyisestä Metrix-datasta (merkki voi muuttua +40:n tuntumassa);
+  kauden vaihdossa jäädytetään.
+
 ## Uuden kilpailun lisääminen
 
 1. Aja `node tools/add-competition.js <Metrix-linkki tai id>`. Se hakee kaiken Metrixin julkisista
@@ -103,6 +122,8 @@ käytä aina viimeisimmän kilpailun antamaa ratingia.
 1. Jäädytä päättynyt kausi `COMPETITIONS_<vuosi>`-taulukoksi. **Tallenna `hc` ja `hcScore`
    täydellä tarkkuudella — älä pyöristä.** Kahden desimaalin pyöristys siirsi kerran tuloksen
    .5-rajan yli ja muutti kahden pelaajan kausipisteitä; `tests/archive.test.js` valvoo tätä.
+   **Tallenna myös jokaisen rivin `roundRating` ja `pointsAbove` täydellä tarkkuudella** radan
+   Metrix-ratinglinjasta vaihtopäivänä; arkiston kuumat kierrokset näytetään vain näistä kentistä.
 2. Luo `<vuosi>.html` olemassa olevan arkistosivun pohjalta.
 3. Poista päättyneet kilpailut `COMPETITIONS`-taulukosta.
 4. Päivitä index.html: otsikko, meta, navigaatio, hero, vuosiväli, osioiden otsikot,

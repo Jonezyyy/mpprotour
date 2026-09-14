@@ -56,6 +56,7 @@ Metrixin `Rating: 0` = ei ratingia.
 ```
 - **`hc` ja `hcScore` täydellä tarkkuudella — ÄLÄ pyöristä.** Pyöristys ennen `Math.round`-sijoitusta voi siirtää tuloksen .5-rajan yli ja muuttaa sijoituksia ja kausipisteitä (tapahtui kerran kaudella 2026).
 - Ei pelannut / DNF: `throws: null, hc: null, hcScore: null, place: null`.
+- Kaudesta 2027 alkaen arkistorivillä myös `roundRating` ja `pointsAbove` (täysi tarkkuus, radan Metrix-ratinglinjasta kauden vaihtopäivänä). Kuuma kierros = `Math.round(pointsAbove) >= 40`; rivit ilman näitä kenttiä (2025, 2026) eivät ole koskaan kuumia.
 - Kaudella 2025 oli eri pistejärjestelmä: sen tallennetut `place`-arvot ovat oikeat eikä niitä lasketa uudelleen.
 
 ## Rajoitukset

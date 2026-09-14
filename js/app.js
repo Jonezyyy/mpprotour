@@ -354,7 +354,7 @@ function renderArchiveCompetitions(containerId, comps, opts = {}) {
       return `
         <tr>
           <td>${res.place != null ? res.place : '–'}</td>
-          <td class="name-cell">${res.name}</td>
+          <td class="name-cell">${res.name}${hotRoundBadge(frozenRoundRatingInfo(res))}</td>
           <td class="rating-cell">${res.rating ?? '–'}</td>
           <td class="throws-cell">${res.throws != null ? res.throws : '–'}</td>
           <td class="hc-cell ${hcClass}">${formatHC(res.hcScore)}</td>
@@ -466,7 +466,7 @@ function buildResultsTable(comp) {
     return `
       <tr>
         <td>${res.place !== null ? res.place : '–'}</td>
-        <td class="name-cell"><button class="player-btn" data-player="${res.name}">${res.name}</button></td>
+        <td class="name-cell"><button class="player-btn" data-player="${res.name}">${res.name}</button>${hotRoundBadge(roundRatingInfo(res.throws, res.rating, comp.layout))}</td>
         <td class="rating-cell">${res.rating ?? '–'}</td>
         <td class="throws-cell">${rawDisplay}</td>
         <td class="hc-cell ${hcClass}">${hcDisplay}</td>
@@ -589,6 +589,48 @@ const liveRatings = {};
 function courseCrv(comp) {
   if (!comp) return null;
   return (comp.layout && comp.layout.ratingPerThrow) || comp.courseRatingValue || null;
+}
+
+// --- Kuuma kierros ---
+
+// Kierros on kuuma, kun se on pyöristettynä vähintään näin monta pistettä
+// pelaajan kierrosta edeltävän ratingin yli.
+const HOT_ROUND_MIN_POINTS = 40;
+
+// Kierros voidaan arvioida vain pelaajalle, jolla on rating ja kirjattu tulos:
+// ei scratch-pelaajia (rating 0) eikä DNF:iä.
+function canJudgeRound(throws, rating) {
+  return rating > 0 && throws > 0;
+}
+
+// Arvio kierroksesta: kierrosrating, sitä edeltänyt rating, pisteet ratingin yli ja
+// onko kierros kuuma (pyöristetyistä pisteistä, jotta näytetty luku täsmää).
+function hotRoundVerdict(roundRating, rating, pointsAbove) {
+  return { roundRating, rating, pointsAbove, hot: Math.round(pointsAbove) >= HOT_ROUND_MIN_POINTS };
+}
+
+// Kierroksen rating radan Metrix-ratinglinjasta: 1000-ratingin pelaajan tulos
+// ja ratingpisteet per heitto (backendin `layout`). Palauttaa null, jos kierrosta
+// ei voi arvioida: rata ilman ratinglinjaa, pelaaja ilman ratingia (scratch) tai DNF.
+function roundRatingInfo(throws, rating, layout) {
+  if (!layout || !canJudgeRound(throws, rating)) return null;
+  const roundRating = 1000 - (throws - layout.layout1000Result) * layout.ratingPerThrow;
+  return hotRoundVerdict(roundRating, rating, roundRating - rating);
+}
+
+// Arkistorivin jäädytetyt arvot (tallennettu kauden vaihdossa). Arkisto ei kutsu
+// Metrixiä, joten rivit ilman näitä kenttiä (kaudet 2025 ja 2026) eivät ole kuumia.
+function frozenRoundRatingInfo(row) {
+  if (!row || row.roundRating == null || row.pointsAbove == null) return null;
+  if (!canJudgeRound(row.throws, row.rating)) return null;
+  return hotRoundVerdict(row.roundRating, row.rating, row.pointsAbove);
+}
+
+// 🔥-merkki kuumalle kierrokselle (tyhjä merkkijono muuten); tooltipissä kierrosrating
+// ja rating, jota vasten kierrosta verrattiin.
+function hotRoundBadge(info) {
+  if (!info || !info.hot) return '';
+  return `<span class="hot-round" title="Kierrosrating ${Math.round(info.roundRating)} (rating ${info.rating})">🔥 +${Math.round(info.pointsAbove)}</span>`;
 }
 
 // Palauttaa null jos ratingia ei löydy mistään — kutsuja päättää mitä tekee.
@@ -752,7 +794,8 @@ function renderCurrentComp() {
     const parScore = (!played && rating && crv && comp.par != null)
       ? Math.round(comp.par + (1000 - rating) / crv)
       : null;
-    return { name, rating, rated: knownRating !== null, throws, dnf, played, hcScore, parScore };
+    const hotRound = (played && !dnf) ? roundRatingInfo(throws, liveRatings[name], comp.layout) : null;
+    return { name, rating, rated: knownRating !== null, throws, dnf, played, hcScore, parScore, hotRound };
   });
 
   if (isActive) {
@@ -799,11 +842,15 @@ function renderCurrentComp() {
       </li>`;
     }
     const diff = p.throws - comp.par;
+    const nameBtn = `<button class="player-btn" data-player="${p.name}">${p.name}</button>`;
+    const badge = hotRoundBadge(p.hotRound);
+    // Kääre vain kuumalle riville, jotta muiden rivien rakenne pysyy ennallaan.
+    const nameHtml = badge ? `<span class="next-player-name">${nameBtn}${badge}</span>` : nameBtn;
     const diffStr = diff > 0 ? `+${diff}` : diff === 0 ? 'E' : `${diff}`;
     const diffCls = diff > 0 ? 'over-par' : diff < 0 ? 'under-par' : 'even-par';
     return `<li class="next-player next-player--played">
       <span class="next-player-num next-player-num--rank">${p.rank ?? '–'}</span>
-      <div class="next-player-info"><button class="player-btn" data-player="${p.name}">${p.name}</button>${ratingTxt ? `<span class="next-player-rating">${ratingTxt}</span>` : ''}</div>
+      <div class="next-player-info">${nameHtml}${ratingTxt ? `<span class="next-player-rating">${ratingTxt}</span>` : ''}</div>
       <span class="next-player-result">HC&nbsp;${Math.round(p.hcScore)}&nbsp;<span class="score-diff ${diffCls}">${diffStr}</span></span>
     </li>`;
   };

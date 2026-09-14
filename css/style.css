@@ -849,6 +849,36 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   white-space: nowrap;
 }
 
+/* Kuuma kierros: kierros vähintään +40 pelaajan ratingin yli (ks. roundRatingInfo) */
+.next-player-name {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.hot-round {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: #ffb36b;
+  background: rgba(255, 120, 40, 0.14);
+  border: 1px solid rgba(255, 120, 40, 0.35);
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: help;
+}
+
+.name-cell .hot-round {
+  margin-left: 0.45rem;
+}
+
 .next-actions {
   display: flex;
   gap: 0.75rem;

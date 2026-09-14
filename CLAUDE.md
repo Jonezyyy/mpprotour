@@ -49,6 +49,20 @@ Resolved newest-first by `lookupPlayerRating`:
 
 Metrix `Rating: 0` means unrated and never overrides a known rating. The owner's rule: always use the rating the latest competition gives.
 
+## Hot rounds
+
+A round is **hot** when it beats the player's rating by at least +40 (`HOT_ROUND_MIN_POINTS`), judged on the rounded value so the shown number always matches.
+
+```js
+roundRating = 1000 - (throws - layout.layout1000Result) * layout.ratingPerThrow
+pointsAbove = roundRating - pre-round rating
+```
+
+- **Pre-round rating:** the round's own `WeeklyHC.Rating` on the live card (`liveRatings`), or the row's `rating` in closed results. Never a fallback rating.
+- **No verdict** (`roundRatingInfo` returns `null`) for unrated players, DNFs, or a course without a Metrix rating line. No marker, no error.
+- **Shown as** an orange `🔥 +NN` pill after the name (`hotRoundBadge`), with the round rating in the tooltip. It appears on the live card, in closed results and in archives, never in season standings.
+- **During the season** verdicts are recomputed from current Metrix data, so a round near +40 can gain or lose its pill. At rollover they are frozen (see below).
+
 ## Common tasks
 
 ### Add a competition
@@ -62,7 +76,7 @@ Metrix `Rating: 0` means unrated and never overrides a known rating. The owner's
 
 ### Roll over to a new season
 
-1. Freeze the finished season into `COMPETITIONS_<year>` in `data.js`. **Store `hc` and `hcScore` at full precision — never round them.** Rounding to 2 decimals once pushed a score across a .5 boundary and changed two players' season totals; `tests/archive.test.js` guards this.
+1. Freeze the finished season into `COMPETITIONS_<year>` in `data.js`. **Store `hc` and `hcScore` at full precision — never round them.** Rounding to 2 decimals once pushed a score across a .5 boundary and changed two players' season totals; `tests/archive.test.js` guards this. **Also store each row's `roundRating` and `pointsAbove` at full precision**, computed from the course's Metrix rating line on the rollover date. Archive pages show hot-round pills only from these frozen fields, and rows without them (2025, 2026) show none.
 2. Create `<year>.html` from an existing archive page, rendering with `renderArchiveCompetitions` and a standings renderer.
 3. Remove the finished competitions from `COMPETITIONS`.
 4. Update `index.html`: title, meta description, nav, hero label, tagline years, section headings, footer status and ticker. Add the new archive link to the nav and footer of every page.
