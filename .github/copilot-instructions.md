@@ -3,115 +3,126 @@
 Tämä on Miesperhe Pro Tour -kiertueen verkkosivusto (mpprotour.fi).
 Vastaa aina **suomeksi**, ellei käyttäjä pyydä toisin.
 
+Sama sisältö englanniksi ja tarkemmin: [CLAUDE.md](../CLAUDE.md). Jos ohjeet
+ovat ristiriidassa, päivitä molemmat.
+
 ## Projektin yleiskuvaus
 
-- **Frontend**: Staattinen sivusto ([index.html](index.html) = kausi 2026, [2025.html](2025.html) = arkisto).
-  Ei build-työkaluja, ei frameworkeja — vanilla HTML/CSS/JS.
-- **Backend**: [backend/server.js](backend/server.js) on Express-proxy Discgolf Metrix APIlle.
-  Ajossa Railwayssa: `https://mpprotour-production.up.railway.app`.
-  5 minuutin in-memory cache.
-- **Data**: [js/data.js](js/data.js) sisältää manuaalisesti ylläpidetyt
-  `PLAYER_RATINGS`, `POINTS_TABLE`, `COMPETITIONS` ja `TOTAL_EVENTS`.
-- **Logiikka**: [js/app.js](js/app.js) renderöi kausitilanteen, osakilpailut ja
-  live-tulokset. Ei moduuleja — globaalit funktiot `<script>`-tageissa.
-- **Tyylit**: [css/style.css](css/style.css) — versio queryllä
-  (`style.css?v=1.0.9`) cachen invalidointiin.
+- **Frontend**: staattinen sivusto, ei build-työkaluja eikä frameworkeja — vanilla HTML/CSS/JS,
+  globaalit funktiot `<script>`-tageissa. [index.html](../index.html) = nykyinen kausi,
+  [2026.html](../2026.html) ja [2025.html](../2025.html) = arkistot. Kaikki kolme sivua lataavat
+  samat `css/style.css`-, `js/data.js`- ja `js/app.js`-tiedostot.
+- **Backend**: [backend/server.js](../backend/server.js) on Express-proxy Disc Golf Metrix
+  APIlle, ajossa Railwayssa (`https://mpprotour-production.up.railway.app`), 5 min cache.
+- **Data**: [js/data.js](../js/data.js)
+  - `COMPETITIONS` — vain nykyisen kauden kilpailut
+  - `COMPETITIONS_2026` — kauden 2026 jäädytetyt lopputulokset (arkiston totuuslähde)
+  - `STANDINGS_2025_FINAL` + `COMPETITIONS_2025` — kaudella 2025 oli eri pistejärjestelmä:
+    tallennetut sijoitukset ovat oikeat, kisakohtaisia pisteitä ei näytetä
+  - `PLAYER_RATINGS` — vain varalla (ks. Ratingit), `POINTS_TABLE`, `TOTAL_EVENTS`
+- **Logiikka**: [js/app.js](../js/app.js) renderöi kausitilanteen, osakilpailut ja live-tulokset.
+- **Julkaisu**: push `main`-haaraan julkaisee GitHub Pagesiin 1–3 minuutissa. Pages julkaisee
+  kaikki versionhallinnan tiedostot pistekansioita lukuun ottamatta — älä committaa salaisuuksia.
 
-## Kilpailun tila (`state`)
-
-Jokaisella `COMPETITIONS`-kohteella on yksi kolmesta tilasta:
-
-- `'over'` — päättynyt, tulokset `comp.results[]`-taulussa, lasketaan kausipisteisiin
-- `'active'` — käynnissä, tulokset haetaan livenä Metrixistä backendin kautta
-- `'next'` — tulossa, näytetään vain par-ennakko
-
-## Ydinkaavat — ÄLÄ MUUTA ilman lupaa
-
-Nämä ovat kanonisia. Jos haluat muuttaa, varmista käyttäjältä ensin.
+## Ydinkaavat — ÄLÄ MUUTA ilman omistajan lupaa
 
 ```js
 // HC-tulos
-hcScore = throws - (1000 - rating) / crv
+hc      = (1000 - rating) / crv
+hcScore = throws - hc
 
 // Sijoitus kilpailussa (pyöristetty HC)
-rounded = Math.round(hcScore)
-place   = results.filter(r => Math.round(r.hcScore) < rounded).length + 1
+place = results.filter(r => Math.round(r.hcScore) < Math.round(hcScore)).length + 1
 
-// Kausipisteet — tasatilanteessa jaettu keskiarvo
+// Kausipisteet — tasatilanteessa jaettujen sijojen pisteet jaetaan tasan
 POINTS_TABLE = [100, 90, 82, 74, 67, 60, 54, 48, 42, 36, 30, 24, 18, 12, 6]
-// Sija 16+ = 0 pistettä
+// Sija 16+ = 0 pistettä. Kaikki osakilpailut lasketaan, huonointa ei pudoteta.
 
-// Tarvittavat heitot lyödäkseen kärjen (live)
-throwsNeeded = Math.ceil(bestHC + (1000 - rating) / crv) - 1
+// Live-kortti, ei vielä pelannut pelaaja
+parHC        = Math.round(par + (1000 - rating) / crv)
+throwsNeeded = Math.ceil(bestHC + (1000 - rating) / crv) - 1   // "Score to beat"
 ```
 
-- `rating`: pelaajan Metrix-rating `PLAYER_RATINGS`-taulusta
-- `crv`: `comp.courseRatingValue`
-- `throws`: pelaajan bruttoheitot
+- `crv` = `comp.courseRatingValue`
+- Pelaaja ilman ratingia pelaa scratchina: rating 1000, HC 0, näytetään "Ei ratingia".
 
 ## Voittajan haku — KRIITTINEN
 
-Käytä **aina** `calcRoundedResults(comp)`-funktiota voittajan löytämiseen.
-**ÄLÄ** käytä `comp.results[0]` tai `comp.results.find(r => r.place === 1)`.
-
-Syy: Railway-API ylikirjoittaa `comp.results` ilman `place`-kenttää.
-`calcRoundedResults` laskee sijoitukset aina uudelleen HC-tuloksista.
+Hae sijoitukset ja voittaja **aina** `calcRoundedResults(comp)`-funktiolla.
+**ÄLÄ** käytä `comp.results[0]` tai `comp.results.find(r => r.place === 1)`:
+Railwaysta haetuissa tuloksissa ei ole `place`-kenttää.
 
 ```js
-const rounded = calcRoundedResults(comp);
-const winner  = rounded.find(r => r.place === 1);
+const winner = calcRoundedResults(comp).find(r => r.place === 1);
 ```
 
-## Kilpailun sulkeminen — työnkulku
+## Kilpailun tila — sivusto hoitaa sulkemisen itse
 
-Kun kilpailu päättyy ja seuraava aktivoidaan, tee nämä vaiheet järjestyksessä:
+`state` data.js:ssä on vain lähtötilanne; sivusto muuttaa sitä ajon aikana.
 
-**1. Hae tulokset backendistä:**
-```
-GET https://mpprotour-production.up.railway.app/api/competition/<id>/results
-```
-Varmista että vastauksessa `"completed": true` ennen kuin jatkat.
+- **Näytettävä kilpailu** = päivämäärältään vanhin ei-päättynyt. Se näkyy "Käynnissä",
+  jos tila on `'active'` tai Metrixissä on jo tuloksia.
+- **Sulkeminen** (`isReadyToClose` app.js:ssä): kilpailu suljetaan kun kaikilla
+  ilmoittautuneilla on tulos **tai** kilpailun `date` on ohi. Päättynyttä ei avata uudelleen.
+- Backendin `completed: true` **ei** tarkoita että kisa on ohi: Metrix lisää WeeklyHC-rivin
+  jokaiselle pelaajalle heti kun hänen kierroksensa on kirjattu. Osakilpailut ovat kuukauden auki.
+- Jos Metrix palauttaa HC-kentät tyhjinä (Kantola 2026), backendin `crv` on null ja käytetään
+  data.js:n käsin syötettyä `courseRatingValue`-arvoa.
+- "Kausi päättynyt" näytetään vasta kun `TOTAL_EVENTS` kilpailua on pelattu; sitä ennen
+  kortti kertoo seuraavan osakilpailun julkaistavan pian.
 
-**2. Laske HC-tulokset ja sijoitukset** käyttäen `crv`-arvoa vastauksesta:
-```
-hcScore = throws - (1000 - rating) / crv   (2 desimaalia)
-place   = pelaajat joiden Math.round(hcScore) < Math.round(oma hcScore), +1
-```
-Tasatilanne (sama pyöristetty HC) → sama sijoitusnumero.
+**Kilpailua ei suljeta käsin** eikä sen `results`-taulukkoa kirjoiteta data.js:ään.
 
-**3. Päivitä `data.js`:**
-- Sulje kilpailu: vaihda `state: 'active'` → `'over'`, poista `registered` ja `registrationEnd`, lisää `results: [...]`
-- Aktivoi seuraava: vaihda `state: 'next'` → `'active'`
-- **Pidä `COMPETITIONS`-taulukko kronologisessa järjestyksessä** (vanhin ensin).
-  Trendipiilit (`▲▼`) perustuvat `overComps[overComps.length - 1]` eli viimeiseen — väärä järjestys rikkoo trendit.
+## Ratingit — päivittyvät itsestään
 
-**4. `results[]`-rivien muoto:**
-```js
-{ place: N, name: '...', rating: NNN, throws: NN, hc: NN.NN, hcScore: NN.NN }
-```
-DNF-pelaajalla `throws: null, hc: null, hcScore: null, place: null`.
+Rating haetaan tässä järjestyksessä (`lookupPlayerRating`):
+
+1. käynnissä olevan kilpailun Metrix-WeeklyHC (`liveRatings`)
+2. uusin päättynyt kilpailu, jossa pelaajalla on rating
+3. `PLAYER_RATINGS`
+
+Metrixin `Rating: 0` = ei ratingia, ei ylikirjoita tunnettua ratingia. Omistajan sääntö:
+käytä aina viimeisimmän kilpailun antamaa ratingia.
+
+## Uuden kilpailun lisääminen
+
+1. Hae `https://discgolfmetrix.com/api.php?content=result&id=<ID>`: nimi, päivä, rata,
+   `Tracks` (par-summa, väylämäärä) ja `Results` (ilmoittautuneet).
+2. **Kysy omistajalta CRV** — sitä ei saa julkisesta APIsta ennen kuin joku on pelannut
+   (`content=course` vaatii API-avaimen); omistaja lukee sen Metrixin käyttöliittymästä.
+   Kysy myös paikkakunta, jota API ei palauta.
+3. Lisää kohde `COMPETITIONS`-taulukkoon olemassa olevien kenttien mukaan.
+4. Nosta cache-versio, aja testit, committaa, pushaa, tarkista live-sivu.
+
+## Kauden vaihto
+
+1. Jäädytä päättynyt kausi `COMPETITIONS_<vuosi>`-taulukoksi. **Tallenna `hc` ja `hcScore`
+   täydellä tarkkuudella — älä pyöristä.** Kahden desimaalin pyöristys siirsi kerran tuloksen
+   .5-rajan yli ja muutti kahden pelaajan kausipisteitä; `tests/archive.test.js` valvoo tätä.
+2. Luo `<vuosi>.html` olemassa olevan arkistosivun pohjalta.
+3. Poista päättyneet kilpailut `COMPETITIONS`-taulukosta.
+4. Päivitä index.html: otsikko, meta, navigaatio, hero, vuosiväli, osioiden otsikot,
+   footer ja ticker; lisää arkistolinkki kaikille sivuille.
 
 ## Työskentelytavat
 
-- **Älä pushaa** (`git push`) ellei käyttäjä erikseen pyydä. Paikalliset
-  commitit ovat ok, mutta odota ennen pushia.
-- **Älä lisää** buildityökaluja, pakettien hallintaa frontendiin, frameworkeja
-  tai TypeScriptiä ilman pyyntöä.
+- **Committaa ja pushaa vain pyynnöstä.** Commitit suoraan `main`-haaraan (se julkaisee).
+- **Cache-versio**: nosta `?v=1.0.N` **jokaisella sivulla**, joka lataa muuttuneen tiedoston.
+- **Testit**: `node --test` (Node 22, ei riippuvuuksia). Testit käyttävät synteettistä kautta
+  ja kiinteää päivää (`loadSite({ today })`), eivät oikeaa dataa.
+- **Kieli**: tunnisteet englanniksi, kommentit ja käyttöliittymä suomeksi.
+- **Älä lisää** buildityökaluja, frontendin pakettienhallintaa, frameworkeja tai TypeScriptiä
+  ilman pyyntöä.
 - **Älä luo dokumentaatiomarkdowneja** tehdyistä muutoksista ilman pyyntöä.
-- **Ratingit päivitetään manuaalisesti** — kun lisäät pelaajan, muista
-  sekä `PLAYER_RATINGS` että tarvittaessa `COMPETITIONS[].registered`.
-- **`TOTAL_EVENTS = 8`** — jos muutat kilpailumäärää, päivitä myös hero-teksti.
 
 ## Backend-API
 
-- `GET /api/competition/:id` → `{ registered: string[] }` (ilmoittautuneiden nimet)
-- `GET /api/competition/:id/results` → kilpailun live-tulokset ja ratingit
-- Validoi aina `:id` numeeriseksi ennen Metrix-kutsua.
-- Cache-TTL 5 min; avainna `results_<id>` erikseen tulospäätepisteelle.
+- `GET /api/competition/:id` → `{ registered: string[] }`
+- `GET /api/competition/:id/results` → `{ completed, crv, players: [{ name, rating, throws, dnf }] }`
+- Validoi `:id` numeeriseksi ennen Metrix-kutsua. Tulospäätepisteen cache-avain on `results_<id>`.
 
 ## Tyyli & saavutettavuus
 
-- Fontit: Bebas Neue, Oswald, Orbitron, Rajdhani, Inter (Google Fonts).
-- Responsiivinen nav, mobiili-hampurilainen (`#nav-toggle`).
-- Säilytä `aria-*`-attribuutit navigaation painikkeissa.
-- Suomenkieliset päiväykset: `toLocaleDateString('fi-FI', { day, month, year })`.
+- Fontit: Bebas Neue, Rajdhani, Inter (Google Fonts).
+- Responsiivinen navigaatio, mobiilin hampurilaisvalikko (`#nav-toggle`); säilytä `aria-*`-attribuutit.
+- Päiväykset: `toLocaleDateString('fi-FI', { day: 'numeric', month: 'long', year: 'numeric' })`.
