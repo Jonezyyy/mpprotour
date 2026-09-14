@@ -583,6 +583,14 @@ function renderCompetitions() {
 // saatavilla olevat ratingit — uudempia kuin yksikään päättynyt kisa.
 const liveRatings = {};
 
+// Radan CRV: Metrixin julkaisema ratinglinja (backendin `layout`) ensin, data.js:n
+// käsin syötetty courseRatingValue varalla — esim. uudella radalla, jota Metrix ei
+// ole vielä ratingoinut, tai jos backend ei saanut ratinglinjaa haettua.
+function courseCrv(comp) {
+  if (!comp) return null;
+  return (comp.layout && comp.layout.ratingPerThrow) || comp.courseRatingValue || null;
+}
+
 // Palauttaa null jos ratingia ei löydy mistään — kutsuja päättää mitä tekee.
 function lookupPlayerRating(name) {
   // Tuorein Metrix-rating voittaa: ensin käynnissä oleva kisa, sitten päättyneet
@@ -622,7 +630,7 @@ async function fetchCurrentCompLiveResults() {
     if (!res.ok) return;
     const data = await res.json();
     if (!data.Competition) return;
-    const crv = comp.courseRatingValue;
+    const crv = courseCrv(comp);
     // Ratingit ensin, jotta tämän kisan HC-tulokset lasketaan niillä eikä vanhoilla.
     // Rating 0 = Metrixillä ei ole pelaajalle ratingia → ei ylikirjoiteta tunnettua.
     (data.Competition.WeeklyHC || []).forEach(e => {
@@ -724,7 +732,7 @@ function renderCurrentComp() {
   }
   setCurrentCompHeading(null);
 
-  const crv = comp.courseRatingValue;
+  const crv = courseCrv(comp);
   // Kisa on "käynnissä" jos data.js sanoo niin TAI jos Metrixissä on jo tuloksia.
   // Jälkimmäinen nostaa seuraavan kisan liveksi ilman käsin tehtävää tilamuutosta.
   const live = liveResultsFor(comp);
@@ -1148,13 +1156,17 @@ async function fetchAllCompetitionResults() {
       const res = await fetch(`${RAILWAY_API_URL}/api/competition/${comp.id}/results`);
       if (!res.ok) return;
       const data = await res.json();
+      // Radan ratinglinja talteen jokaiselle kisalle, myös kesken olevalle:
+      // live-kortti laskee handicapit sen CRV:llä.
+      comp.layout = data.layout || null;
       if (!data.completed || !Array.isArray(data.players) || data.players.length === 0) return;
 
-      // Metrix ei aina laske handicapeja (WeeklyHC:n HC-kentät tyhjiä, kuten
-      // Kantolassa 2026). Silloin käytetään data.js:n käsin syötettyä arvoa,
+      // Ensisijaisesti Metrixin pelaajien handicapeista laskema CRV. Metrix ei aina
+      // laske handicapeja (WeeklyHC:n HC-kentät tyhjiä, kuten Kantolassa 2026);
+      // silloin radan ratinglinja ja viimeisenä data.js:n käsin syötetty arvo,
       // jottei kilpailu jää ikuisesti auki.
       const metrixCrv = data.crv;
-      const crv = metrixCrv || comp.courseRatingValue;
+      const crv = metrixCrv || courseCrv(comp);
       if (!crv) return;
 
       if (comp.state !== 'over' && !isReadyToClose(comp, data.players)) return;

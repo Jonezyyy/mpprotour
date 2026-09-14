@@ -13,8 +13,9 @@ Handicap disc golf league site at https://mpprotour.fi. Scores come from Disc Go
   - `PLAYER_RATINGS` — fallback only (see Ratings)
   - `POINTS_TABLE`, `TOTAL_EVENTS`, `RAILWAY_API_URL`
 - **`js/app.js`** renders everything. On load, `fetchAllCompetitionResults()` runs first and may close competitions, then renderers run, then live results for the current competition are fetched.
-- **`backend/server.js`** is an Express proxy over the Metrix API with a 5-minute in-memory cache, hosted on Railway (deployed separately from the site). Endpoints: `GET /api/competition/:id` (registered names) and `GET /api/competition/:id/results` (`completed`, `crv`, players with rating/throws/dnf).
-- **Deploy:** pushing to `main` publishes via GitHub Pages in 1–3 minutes. Pages serves the repo root except dot-folders, so tracked files are public — never commit secrets.
+- **`backend/server.js`** is an Express proxy over the Metrix API with a 5-minute in-memory cache, hosted on Railway (project "MP Pro Tour", service `mpprotour`, built from this repo's `main` branch with root `/backend`). Endpoints: `GET /api/competition/:id` (registered names) and `GET /api/competition/:id/results` (`completed`, `crv`, players with rating/throws/dnf, and `layout`: the course's Metrix rating line `{ courseId, layout1000Result, ratingPerThrow }` or `null`, cached 24 h per course).
+- **`tools/add-competition.js`** builds a `COMPETITIONS` entry from a Metrix link (see Add a competition).
+- **Deploy:** pushing to `main` publishes the site via GitHub Pages in 1–3 minutes **and** triggers a Railway redeploy of the backend. Backend changes must stay compatible with the site running either version during the rollout. Pages serves the repo root except dot-folders, so tracked files are public — never commit secrets.
 
 ## Scoring — don't change without the owner's approval
 
@@ -35,7 +36,7 @@ place   = count of players with Math.round(hcScore) < Math.round(own hcScore), +
 - **Current competition** = the earliest non-`over` competition by date. It shows as "Käynnissä" if its state is `active` or Metrix already has scores for it.
 - **Closing** (`isReadyToClose`): a competition closes when every registrant has a score **or** its `date` has passed. A closed competition is never reopened.
 - **Why not just `completed`:** Metrix adds a `WeeklyHC` row (Rating, HC) for each player as soon as their round is scored, so the backend reports `completed: true` after the very first round. Competitions run for a month.
-- **CRV fallback:** Metrix sometimes returns `HC: null` for every row (Kantola 2026), making the backend's `crv` null. The hand-entered `courseRatingValue` is then used; without it the competition would stay open forever.
+- **Course CRV:** `courseCrv(comp)` gives the CRV for live handicaps and the live card: the course's Metrix rating line (`layout.ratingPerThrow`, fetched automatically) first, the hand-entered `courseRatingValue` only as a fallback (course not yet rated by Metrix, or backend down). When a competition closes, the CRV Metrix derives from the players' actual handicaps (`crv`) wins; if Metrix returns `HC: null` for every row (Kantola 2026) it falls back to `courseCrv`, so the competition never stays open forever.
 - **No open competition:** the "Kausi päättynyt" card appears only once `TOTAL_EVENTS` competitions are over. Before that, the card says the next competition is "Julkaistaan pian".
 
 ## Ratings
@@ -52,10 +53,12 @@ Metrix `Rating: 0` means unrated and never overrides a known rating. The owner's
 
 ### Add a competition
 
-1. Fetch `https://discgolfmetrix.com/api.php?content=result&id=<ID>` and read `Name`, `Date`, `CourseName`, `Tracks` (sum `Par`, count holes) and `Results` (registrants).
-2. **Ask the owner for the CRV.** It isn't available from the public API before anyone has played (`content=course` needs an API key); the owner reads it from the Metrix UI, and their values are reliable. Also ask for the city, which the API doesn't return.
-3. Add the entry to `COMPETITIONS` in the existing shape (`state`, `id`, `name`, `fullName`, `date`, `course`, `location`, `par`, `holes`, `courseRatingValue`, `registrationEnd`, `url`, `registerUrl`, `registered`).
-4. Bump the cache version, run tests, commit, push, verify live.
+1. Run `node tools/add-competition.js <Metrix link or id>`. It fetches everything from Metrix's public APIs (no key) and prints a `COMPETITIONS` entry: name, date, course, par, holes, registrants, city and area (`courses_list`), and CRV (`course_rating_server.php`).
+2. Check the printed entry before pasting it into `COMPETITIONS`:
+   - **Name:** the tool strips the "MP Pro Tour YYYY –" prefix. Shorten further if the league uses a shorter name (it prints "Sibbe Blue" for Sibbe).
+   - **Location:** Metrix's `Area` isn't always the region (Iittala lists "Iittala"). Fix it if needed.
+   - **CRV:** only a fallback, since the site uses the live Metrix value. **Ask the owner for the CRV only if the tool reports that the course has no Metrix rating.**
+3. Bump the cache version, run tests, commit, push, verify live.
 
 ### Roll over to a new season
 

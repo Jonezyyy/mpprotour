@@ -13,7 +13,7 @@ hc      = (1000 - rating) / crv
 hcScore = throws - hc
 ```
 - `throws`: pelaajan bruttoheitot
-- `crv`: `comp.courseRatingValue`; Metrixin laskema arvo korvaa käsin syötetyn, kun se on saatavilla
+- `crv`: live-tilanteessa `courseCrv(comp)` = radan Metrix-ratinglinja (`layout.ratingPerThrow`), data.js:n `courseRatingValue` varalla; sulkeutuessa Metrixin handicapeista laskettu `crv` voittaa, varalla `courseCrv`
 - `rating`: ks. Ratingien määräytyminen. Ilman ratingia pelataan scratchina (rating 1000, HC 0).
 
 **Sijoitus (pyöristys ennen vertailua):**

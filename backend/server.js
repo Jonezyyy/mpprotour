@@ -11,6 +11,50 @@ app.use(cors());
 const cache = {};
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
+// Radan (layoutin) ratinglinja muuttuu korkeintaan kerran vuorokaudessa:
+// Metrix laskee ratingit uudelleen öisin klo 3.
+const LAYOUT_TTL_MS = 24 * 60 * 60 * 1000;
+
+// Hakee radan ratinglinjan Metrixistä: tulos jonka 1000-ratingin pelaaja heittää
+// ja ratingpisteet per heitto (= radan CRV). Palauttaa null jos rataa ei ole
+// ratingoitu tai haku epäonnistuu — ei koskaan heitä virhettä, jottei radan
+// puuttuminen kaada kilpailun tuloksia.
+async function getLayout(courseId) {
+  if (!/^\d+$/.test(String(courseId || ''))) return null;
+
+  const key = `layout_${courseId}`;
+  const now = Date.now();
+  if (cache[key] && cache[key].expiresAt > now) return cache[key].data;
+
+  try {
+    const response = await fetch(
+      `https://discgolfmetrix.com/course_rating_server.php?course_id=${courseId}`,
+      { timeout: 8000 }
+    );
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const json = await response.json();
+
+    // Ratingoidulle radalle Metrix palauttaa taulukon: [1] = [[ka.rating, ka.tulos], [1000, tulos]],
+    // [2] = ratinglinja [rating, tulos] -pareina. Ilman ratingia vastaus on objekti.
+    let data = null;
+    if (Array.isArray(json) && Array.isArray(json[1]) && Array.isArray(json[2]) && json[2].length >= 2) {
+      const layout1000Result = Number(json[1][1]?.[1]);
+      const [a, b] = json[2];
+      const ratingPerThrow = Math.abs((a[0] - b[0]) / (a[1] - b[1]));
+      if (Number.isFinite(layout1000Result) && Number.isFinite(ratingPerThrow) && ratingPerThrow > 0) {
+        data = { courseId: Number(courseId), layout1000Result, ratingPerThrow };
+      }
+    }
+
+    cache[key] = { data, expiresAt: now + LAYOUT_TTL_MS };
+    return data;
+  } catch (err) {
+    // Ei välimuistiin: seuraava tuloshaku yrittää uudelleen.
+    console.error(`Failed to fetch layout ${courseId}:`, err.message);
+    return null;
+  }
+}
+
 app.get('/api/competition/:id', async (req, res) => {
   const { id } = req.params;
 
@@ -72,7 +116,7 @@ app.get('/api/competition/:id/results', async (req, res) => {
     const comp = json?.Competition;
     if (!comp) return res.status(502).json({ error: 'Invalid Metrix response' });
 
-    // Build rating map from WeeklyHC (only present for completed events)
+    // Build rating map from WeeklyHC (a row appears as soon as a player's round is scored)
     const ratingMap = {};
     (comp.WeeklyHC || []).forEach(e => {
       if (e.Name) ratingMap[e.Name] = parseInt(e.Rating, 10) || null;
@@ -103,7 +147,10 @@ app.get('/api/competition/:id/results', async (req, res) => {
         };
       });
 
-    const data = { completed, crv, players };
+    // Radan ratinglinja (CRV ja 1000-ratingin tulos); null jos ei saatavilla.
+    const layout = await getLayout(comp.CourseID);
+
+    const data = { completed, crv, players, layout };
     cache[cacheKey] = { data, expiresAt: now + CACHE_TTL_MS };
     return res.json(data);
   } catch (err) {

@@ -23,9 +23,10 @@ function makeEl() {
 }
 
 // Railwayn /results-vastaus. rivit: [nimi, rating, heitot] — heitot null = DNF.
-function railwayResults(rows, crv, completed = true) {
+// layout: radan ratinglinja { courseId, layout1000Result, ratingPerThrow } tai null.
+function railwayResults(rows, crv, completed = true, layout = null) {
   return {
-    completed, crv,
+    completed, crv, layout,
     players: rows.map(([name, rating, throws]) => ({
       name, rating: rating ?? null,
       throws: throws ?? null,

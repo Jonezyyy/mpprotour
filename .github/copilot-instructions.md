@@ -21,8 +21,10 @@ ovat ristiriidassa, päivitä molemmat.
     tallennetut sijoitukset ovat oikeat, kisakohtaisia pisteitä ei näytetä
   - `PLAYER_RATINGS` — vain varalla (ks. Ratingit), `POINTS_TABLE`, `TOTAL_EVENTS`
 - **Logiikka**: [js/app.js](../js/app.js) renderöi kausitilanteen, osakilpailut ja live-tulokset.
-- **Julkaisu**: push `main`-haaraan julkaisee GitHub Pagesiin 1–3 minuutissa. Pages julkaisee
-  kaikki versionhallinnan tiedostot pistekansioita lukuun ottamatta — älä committaa salaisuuksia.
+- **Julkaisu**: push `main`-haaraan julkaisee sivuston GitHub Pagesiin 1–3 minuutissa **ja** käynnistää
+  backendin uudelleenjulkaisun Railwayssa (juuri `/backend`). Backendin muutosten pitää toimia myös
+  sivuston edellisen version kanssa julkaisun ajan. Pages julkaisee kaikki versionhallinnan
+  tiedostot pistekansioita lukuun ottamatta — älä committaa salaisuuksia.
 
 ## Ydinkaavat — ÄLÄ MUUTA ilman omistajan lupaa
 
@@ -43,7 +45,7 @@ parHC        = Math.round(par + (1000 - rating) / crv)
 throwsNeeded = Math.ceil(bestHC + (1000 - rating) / crv) - 1   // "Score to beat"
 ```
 
-- `crv` = `comp.courseRatingValue`
+- `crv` = `courseCrv(comp)`: radan Metrix-ratinglinja, data.js:n `courseRatingValue` varalla (ks. Radan CRV)
 - Pelaaja ilman ratingia pelaa scratchina: rating 1000, HC 0, näytetään "Ei ratingia".
 
 ## Voittajan haku — KRIITTINEN
@@ -66,8 +68,10 @@ const winner = calcRoundedResults(comp).find(r => r.place === 1);
   ilmoittautuneilla on tulos **tai** kilpailun `date` on ohi. Päättynyttä ei avata uudelleen.
 - Backendin `completed: true` **ei** tarkoita että kisa on ohi: Metrix lisää WeeklyHC-rivin
   jokaiselle pelaajalle heti kun hänen kierroksensa on kirjattu. Osakilpailut ovat kuukauden auki.
-- Jos Metrix palauttaa HC-kentät tyhjinä (Kantola 2026), backendin `crv` on null ja käytetään
-  data.js:n käsin syötettyä `courseRatingValue`-arvoa.
+- **Radan CRV** (`courseCrv`): live-handicapit ja live-kortti käyttävät radan Metrix-ratinglinjaa
+  (`layout.ratingPerThrow`, haetaan automaattisesti); data.js:n `courseRatingValue` on vain varalla
+  (rata ei vielä ratingoitu tai backend alhaalla). Sulkeutuessa Metrixin handicapeista laskettu `crv`
+  voittaa; jos HC-kentät ovat tyhjiä (Kantola 2026), käytetään `courseCrv`-arvoa.
 - "Kausi päättynyt" näytetään vasta kun `TOTAL_EVENTS` kilpailua on pelattu; sitä ennen
   kortti kertoo seuraavan osakilpailun julkaistavan pian.
 
@@ -86,13 +90,13 @@ käytä aina viimeisimmän kilpailun antamaa ratingia.
 
 ## Uuden kilpailun lisääminen
 
-1. Hae `https://discgolfmetrix.com/api.php?content=result&id=<ID>`: nimi, päivä, rata,
-   `Tracks` (par-summa, väylämäärä) ja `Results` (ilmoittautuneet).
-2. **Kysy omistajalta CRV** — sitä ei saa julkisesta APIsta ennen kuin joku on pelannut
-   (`content=course` vaatii API-avaimen); omistaja lukee sen Metrixin käyttöliittymästä.
-   Kysy myös paikkakunta, jota API ei palauta.
-3. Lisää kohde `COMPETITIONS`-taulukkoon olemassa olevien kenttien mukaan.
-4. Nosta cache-versio, aja testit, committaa, pushaa, tarkista live-sivu.
+1. Aja `node tools/add-competition.js <Metrix-linkki tai id>`. Se hakee kaiken Metrixin julkisista
+   rajapinnoista (ei API-avainta) ja tulostaa `COMPETITIONS`-kohteen: nimi, päivä, rata, par,
+   väylät, ilmoittautuneet, paikkakunta ja CRV.
+2. Tarkista tuloste ennen liittämistä: lyhennä nimi tarvittaessa (työkalu antaa esim. "Sibbe Blue"),
+   korjaa sijainti jos Metrixin `Area` ei ole maakunta (esim. Iittala). CRV on vain varalla-arvo —
+   **kysy omistajalta CRV vain, jos työkalu kertoo ettei radalla ole Metrix-ratingia**.
+3. Nosta cache-versio, aja testit, committaa, pushaa, tarkista live-sivu.
 
 ## Kauden vaihto
 
@@ -118,7 +122,9 @@ käytä aina viimeisimmän kilpailun antamaa ratingia.
 ## Backend-API
 
 - `GET /api/competition/:id` → `{ registered: string[] }`
-- `GET /api/competition/:id/results` → `{ completed, crv, players: [{ name, rating, throws, dnf }] }`
+- `GET /api/competition/:id/results` → `{ completed, crv, players: [{ name, rating, throws, dnf }], layout }`
+  — `layout` = radan Metrix-ratinglinja `{ courseId, layout1000Result, ratingPerThrow }` tai `null`,
+  välimuistissa 24 h per rata. Radan puuttuminen ei koskaan kaada tulosvastausta.
 - Validoi `:id` numeeriseksi ennen Metrix-kutsua. Tulospäätepisteen cache-avain on `results_<id>`.
 
 ## Tyyli & saavutettavuus
