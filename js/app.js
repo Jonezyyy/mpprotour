@@ -895,7 +895,7 @@ function renderCurrentComp() {
     const waitingLabel = isActive && playedPlayers.length > 0 ? 'Ei vielä pelannut' : 'Ilmoittautuneet';
     const showParScore = waitingPlayers.some(p => p.parScore != null);
     playerList += `<li class="next-player-section-label">${waitingLabel}</li>`;
-    playerList += `<li class="next-player-col-header${showParScore ? ' next-player-col-header--with-par' : ''}"><span></span><span class="next-player-col-name"></span><span class="next-player-col-rating">Rating</span>${showParScore ? '<span class="next-player-col-par-score">Score</span>' : ''}<span class="next-player-col-beat">Score to lead</span></li>`;
+    playerList += `<li class="next-player-col-header${showParScore ? ' next-player-col-header--with-par' : ''}"><span></span><span class="next-player-col-name"></span><span class="next-player-col-rating">Rating</span>${showParScore ? '<span class="next-player-col-par-score">HC Par</span>' : ''}<span class="next-player-col-beat">Score to lead</span></li>`;
     playerList += waitingPlayers.map(p => renderWaitingRow(p)).join('');
   }
 
