@@ -594,8 +594,14 @@ function courseCrv(comp) {
 // --- Kuuma kierros ---
 
 // Kierros on kuuma, kun se on pyöristettynä vähintään näin monta pistettä
-// pelaajan kierrosta edeltävän ratingin yli.
-const HOT_ROUND_MIN_POINTS = 40;
+// pelaajan kierrosta edeltävän ratingin yli. Kynnys riippuu ratingista: korkeammalla
+// ratingilla on vähemmän tilaa ylittää oma ratingsa, joten kynnys on matalampi.
+function hotRoundMinPoints(rating) {
+  if (rating >= 900) return 30;
+  if (rating >= 800) return 40;
+  if (rating >= 700) return 50;
+  return 60;
+}
 
 // Kierros voidaan arvioida vain pelaajalle, jolla on rating ja kirjattu tulos:
 // ei scratch-pelaajia (rating 0) eikä DNF:iä.
@@ -606,7 +612,7 @@ function canJudgeRound(throws, rating) {
 // Arvio kierroksesta: kierrosrating, sitä edeltänyt rating, pisteet ratingin yli ja
 // onko kierros kuuma (pyöristetyistä pisteistä, jotta näytetty luku täsmää).
 function hotRoundVerdict(roundRating, rating, pointsAbove) {
-  return { roundRating, rating, pointsAbove, hot: Math.round(pointsAbove) >= HOT_ROUND_MIN_POINTS };
+  return { roundRating, rating, pointsAbove, hot: Math.round(pointsAbove) >= hotRoundMinPoints(rating) };
 }
 
 // Kierroksen rating radan Metrix-ratinglinjasta: 1000-ratingin pelaajan tulos

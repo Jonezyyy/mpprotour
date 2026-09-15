@@ -90,8 +90,17 @@ käytä aina viimeisimmän kilpailun antamaa ratingia.
 
 ## Kuuma kierros
 
-Kierros on **kuuma**, kun se on pyöristettynä vähintään +40 pelaajan kierrosta edeltävän ratingin yli
-(`HOT_ROUND_MIN_POINTS`).
+Kierros on **kuuma**, kun se on pyöristettynä vähintään kynnyksen verran pelaajan kierrosta edeltävän
+ratingin yli (`hotRoundMinPoints`). Kynnys porrastuu ratingin mukaan, koska kiinteä kynnys sulki
+korkean ratingin pelaajat käytännössä kokonaan pois (lähellä kattoa on vähän tilaa ylittää oma
+ratingsa) ja merkitsi liikaa keskitason ratingeilla:
+
+| Rating ennen kierrosta | Kynnys |
+|---|---|
+| 900+ | +30 |
+| 800-899 | +40 |
+| 700-799 | +50 |
+| 0-699 | +60 |
 
 ```js
 roundRating = 1000 - (throws - layout.layout1000Result) * layout.ratingPerThrow
@@ -99,12 +108,12 @@ pointsAbove = roundRating - kierrosta edeltävä rating
 ```
 
 - **Vertailurating:** live-kortilla kierroksen oma `WeeklyHC.Rating` (`liveRatings`), päättyneissä
-  tuloksissa rivin `rating`. Ei koskaan varalla-ratingia.
+  tuloksissa rivin `rating`. Ei koskaan varalla-ratingia. Sama rating määrää myös kynnysportaan.
 - **Ei arviota** (`roundRatingInfo` → `null`): ratingiton pelaaja, DNF tai rata ilman Metrix-ratinglinjaa.
   Ei merkkiä, ei virhettä.
 - **Näkyy** oranssina `🔥 +NN` -merkkinä nimen perässä (`hotRoundBadge`), kierrosrating tooltipissä:
   live-kortilla, päättyneissä tuloksissa ja arkistossa — ei kausitilanteessa.
-- **Kauden aikana** lasketaan nykyisestä Metrix-datasta (merkki voi muuttua +40:n tuntumassa);
+- **Kauden aikana** lasketaan nykyisestä Metrix-datasta (merkki voi muuttua kynnyksen tuntumassa);
   kauden vaihdossa jäädytetään.
 
 ## Uuden kilpailun lisääminen

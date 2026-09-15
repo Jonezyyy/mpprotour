@@ -51,17 +51,24 @@ Metrix `Rating: 0` means unrated and never overrides a known rating. The owner's
 
 ## Hot rounds
 
-A round is **hot** when it beats the player's rating by at least +40 (`HOT_ROUND_MIN_POINTS`), judged on the rounded value so the shown number always matches.
+A round is **hot** when it beats the player's rating by at least a threshold that depends on that rating (`hotRoundMinPoints`), judged on the rounded value so the shown number always matches. A flat threshold effectively locked out high-rated players (near-max rating leaves little room to beat it) while over-triggering in the mid ratings, so the threshold is tiered instead:
+
+| Pre-round rating | Threshold |
+|---|---|
+| 900+ | +30 |
+| 800-899 | +40 |
+| 700-799 | +50 |
+| 0-699 | +60 |
 
 ```js
 roundRating = 1000 - (throws - layout.layout1000Result) * layout.ratingPerThrow
 pointsAbove = roundRating - pre-round rating
 ```
 
-- **Pre-round rating:** the round's own `WeeklyHC.Rating` on the live card (`liveRatings`), or the row's `rating` in closed results. Never a fallback rating.
+- **Pre-round rating:** the round's own `WeeklyHC.Rating` on the live card (`liveRatings`), or the row's `rating` in closed results. Never a fallback rating. This is also what selects the tier.
 - **No verdict** (`roundRatingInfo` returns `null`) for unrated players, DNFs, or a course without a Metrix rating line. No marker, no error.
 - **Shown as** an orange `🔥 +NN` pill after the name (`hotRoundBadge`), with the round rating in the tooltip. It appears on the live card, in closed results and in archives, never in season standings.
-- **During the season** verdicts are recomputed from current Metrix data, so a round near +40 can gain or lose its pill. At rollover they are frozen (see below).
+- **During the season** verdicts are recomputed from current Metrix data, so a round near its tier's threshold can gain or lose its pill. At rollover they are frozen (see below).
 
 ## Common tasks
 

@@ -1,8 +1,8 @@
 'use strict';
 
 // Kuuma kierros: pelaaja pelaa radalla paremmin kuin rating ennustaa.
-// Säännöt: CLAUDE.md, osio "Hot rounds" (kynnys +40 pyöristettynä, ratingittomat ja
-// DNF:t eivät koskaan, merkki nimen perässä, arkistossa jäädytetyt arvot).
+// Säännöt: CLAUDE.md, osio "Hot rounds" (rating-porrastettu kynnys pyöristettynä,
+// ratingittomat ja DNF:t eivät koskaan, merkki nimen perässä, arkistossa jäädytetyt arvot).
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -35,15 +35,41 @@ test('kierrosta ei arvioida ilman radan ratinglinjaa, ratingia tai tulosta', () 
   assert.equal(info(0, 749, SIBBE), null, 'ei heittoja');
 });
 
-test('kuuma kierros ratkaistaan pyöristetyistä pisteistä, kynnys +40', () => {
+test('kuuma kierros ratkaistaan pyöristetyistä pisteistä, kynnys ratingin mukaan', () => {
   const site = loadSite();
   // Rata: 1000-ratingin pelaaja heittää 60.06, heitto = 10 pistettä → 80 heittoa = kierrosrating 800.6
   const layout = { courseId: 1, layout1000Result: 60.06, ratingPerThrow: 10 };
   const hot = (rating) => site.get(`roundRatingInfo(80, ${rating}, ${JSON.stringify(layout)})`).hot;
 
-  assert.equal(hot(760), true, '+40.6 → kuuma');
-  assert.equal(hot(761), true, '+39.6 näkyy +40:nä → kuuma');
-  assert.equal(hot(762), false, '+38.6 näkyy +39:nä → ei kuuma');
+  // Ratingit 700-799: kynnys +50.
+  assert.equal(hot(750), true, '+50.6 → kuuma');
+  assert.equal(hot(751), true, '+49.6 näkyy +50:nä → kuuma');
+  assert.equal(hot(752), false, '+48.6 näkyy +49:nä → ei kuuma');
+});
+
+test('kuuman kierroksen kynnys porrastuu ratingin mukaan: 900+:30, 800-899:40, 700-799:50, 0-699:60', () => {
+  const site = loadSite();
+  // Rata: 1000-ratingin pelaaja heittää 60, heitto = 10 pistettä.
+  const layout = { courseId: 1, layout1000Result: 60, ratingPerThrow: 10 };
+  const hot = (throws, rating) => site.get(`roundRatingInfo(${throws}, ${rating}, ${JSON.stringify(layout)})`).hot;
+
+  // 900+: kynnys +30. rating 920, kierrosrating 950 → +30 (kuuma), kierrosrating 940 → +20 (ei).
+  assert.equal(hot(65, 920), true, '900+ kynnys +30: +30 → kuuma');
+  assert.equal(hot(66, 920), false, '900+ kynnys +30: +20 → ei kuuma');
+
+  // 800-899: kynnys +40. rating 850, kierrosrating 890 → +40 (kuuma), kierrosrating 870 → +20 (ei).
+  assert.equal(hot(71, 850), true, '800-899 kynnys +40: +40 → kuuma');
+  assert.equal(hot(73, 850), false, '800-899 kynnys +40: +20 → ei kuuma');
+
+  // 0-699: kynnys +60. rating 650, kierrosrating 710 → +60 (kuuma), kierrosrating 690 → +40 (ei).
+  assert.equal(hot(89, 650), true, '0-699 kynnys +60: +60 → kuuma');
+  assert.equal(hot(91, 650), false, '0-699 kynnys +60: +40 → ei kuuma');
+
+  // Kynnys rajalla: sama kierrosrating 930, kaksi ratingia eri puolin 900-rajaa.
+  // Rating 900 kuuluu tasoon 900+ (kynnys +30): +30 → kuuma.
+  // Rating 899 kuuluu tasoon 800-899 (kynnys +40): +31 < +40 → ei kuuma.
+  assert.equal(hot(67, 900), true, 'rating 900 kuuluu tasoon 900+ (+30 → kuuma)');
+  assert.equal(hot(67, 899), false, 'rating 899 kuuluu tasoon 800-899 (+31 < +40 → ei kuuma)');
 });
 
 // --- Live-kortti ---
@@ -65,25 +91,26 @@ async function liveCard(metrixRows, weekly, layout = ROUND_LAYOUT) {
 }
 
 test('live-kortti merkitsee kuuman kierroksen liekillä ja pisteillä ratingin yli', async () => {
-  // Tomi S 79 heittoa, rating 764 → kierrosrating 810, +46. Jukka Vesa 82 → 780, ei kuuma.
+  // Tomi S 78 heittoa, rating 764 (tasoa 700-799, kynnys +50) → kierrosrating 820, +56.
+  // Jukka Vesa 82 → 780, ei kuuma.
   const card = await liveCard(
-    [['Tomi S', 79], ['Jukka Vesa', 82]],
+    [['Tomi S', 78], ['Jukka Vesa', 82]],
     [['Tomi S', 764], ['Jukka Vesa', 933]]
   );
 
-  assert.match(card, /🔥 \+46/);
-  assert.match(card, /Kierrosrating 810 \(rating 764\)/);
+  assert.match(card, /🔥 \+56/);
+  assert.match(card, /Kierrosrating 820 \(rating 764\)/);
   assert.equal((card.match(/🔥/g) || []).length, 1, 'vain kuuma kierros merkitään');
 });
 
 test('live-kortti ei merkitse kierrosta ilman kierroksen omaa ratingia tai radan ratinglinjaa', async () => {
-  // Tomi S heittää 79 (olisi +46), mutta Metrix ei anna hänelle kierroksen ratingia:
+  // Tomi S heittää 78 (olisi +56), mutta Metrix ei anna hänelle kierroksen ratingia:
   // aiemmista kisoista tunnettu rating ei kelpaa vertailukohdaksi.
-  const noRoundRating = await liveCard([['Tomi S', 79]], []);
+  const noRoundRating = await liveCard([['Tomi S', 78]], []);
   assert.doesNotMatch(noRoundRating, /🔥/, 'ei kierroksen ratingia');
 
   // Sama kierros radalla, jolla ei ole Metrix-ratinglinjaa.
-  const noLayout = await liveCard([['Tomi S', 79]], [['Tomi S', 764]], null);
+  const noLayout = await liveCard([['Tomi S', 78]], [['Tomi S', 764]], null);
   assert.doesNotMatch(noLayout, /🔥/, 'ei radan ratinglinjaa');
   assert.match(noLayout, /Tomi S/, 'kierros näkyy silti kortilla');
 });
@@ -91,16 +118,16 @@ test('live-kortti ei merkitse kierrosta ilman kierroksen omaa ratingia tai radan
 // --- Päättyneiden kisojen tulostaulukot ---
 
 test('kauden aikana päättyneen kisan tulostaulukko merkitsee kuuman kierroksen', async () => {
-  // Molemmat pelanneet → kisa sulkeutuu. Tomi S 79 (+46, kuuma), Jukka Vesa 82 (ei).
+  // Molemmat pelanneet → kisa sulkeutuu. Tomi S 78 (+56, kuuma), Jukka Vesa 82 (ei).
   const site = loadSite({
-    results: { [TEST_ACTIVE]: railwayResults([['Tomi S', 764, 79], ['Jukka Vesa', 933, 82]], null, true, ROUND_LAYOUT) }
+    results: { [TEST_ACTIVE]: railwayResults([['Tomi S', 764, 78], ['Jukka Vesa', 933, 82]], null, true, ROUND_LAYOUT) }
   });
   await site.run('fetchAllCompetitionResults()');
   assert.ok(site.compNames().includes('Testikisa A'), 'kisa on päättynyt');
 
   const table = site.get(`buildResultsTable(COMPETITIONS.find(c => c.id === ${TEST_ACTIVE}))`);
-  assert.match(table, /🔥 \+46/);
-  assert.match(table, /Kierrosrating 810 \(rating 764\)/);
+  assert.match(table, /🔥 \+56/);
+  assert.match(table, /Kierrosrating 820 \(rating 764\)/);
   assert.equal((table.match(/🔥/g) || []).length, 1, 'vain kuuma kierros merkitään');
 });
 
@@ -113,14 +140,14 @@ test('arkisto näyttää kuuman kierroksen jäädytetyistä arvoista, ei ilman n
     id: 9000099, name: 'Arkistokisa', date: '2027-05-01', location: 'Testila', course: 'Testirata',
     par: 60, holes: 18, courseRatingValue: 10, url: 'https://discgolfmetrix.com/9000099',
     results: [
-      { name: 'Tomi S', rating: 764, throws: 79, hc: 23.6, hcScore: 55.4, roundRating: 810, pointsAbove: 46 },
+      { name: 'Tomi S', rating: 764, throws: 78, hc: 23.6, hcScore: 55.4, roundRating: 820, pointsAbove: 56 },
       { name: 'Jukka Vesa', rating: 933, throws: 82, hc: 6.7, hcScore: 75.3, roundRating: 780, pointsAbove: -153 }
     ]
   };
   site.get(`renderArchiveCompetitions('arkisto-testi', [${JSON.stringify(frozen)}], { showPoints: true })`);
   const html = site.get(`document.getElementById('arkisto-testi').innerHTML`);
-  assert.match(html, /🔥 \+46/);
-  assert.match(html, /Kierrosrating 810 \(rating 764\)/);
+  assert.match(html, /🔥 \+56/);
+  assert.match(html, /Kierrosrating 820 \(rating 764\)/);
   assert.equal((html.match(/🔥/g) || []).length, 1, 'vain kuuma kierros merkitään');
 
   // Kauden 2026 arkistorivit eivät sisällä jäädytettyjä arvoja → ei merkkejä.
@@ -129,9 +156,9 @@ test('arkisto näyttää kuuman kierroksen jäädytetyistä arvoista, ei ilman n
 });
 
 test('kausitilanne ei näytä kuumia kierroksia', async () => {
-  // Kisa päättyy Tomi S:n kuumalla kierroksella (+46); kausitilanteessa ei silti merkkiä.
+  // Kisa päättyy Tomi S:n kuumalla kierroksella (+56); kausitilanteessa ei silti merkkiä.
   const site = loadSite({
-    results: { [TEST_ACTIVE]: railwayResults([['Tomi S', 764, 79], ['Jukka Vesa', 933, 82]], null, true, ROUND_LAYOUT) }
+    results: { [TEST_ACTIVE]: railwayResults([['Tomi S', 764, 78], ['Jukka Vesa', 933, 82]], null, true, ROUND_LAYOUT) }
   });
   await site.run('fetchAllCompetitionResults()');
   assert.match(site.get(`buildResultsTable(COMPETITIONS.find(c => c.id === ${TEST_ACTIVE}))`), /🔥/,

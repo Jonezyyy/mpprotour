@@ -849,7 +849,7 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   white-space: nowrap;
 }
 
-/* Kuuma kierros: kierros vähintään +40 pelaajan ratingin yli (ks. roundRatingInfo) */
+/* Kuuma kierros: kierros vähintään ratingin mukaisen kynnyksen verran pelaajan ratingin yli (ks. hotRoundMinPoints) */
 .next-player-name {
   display: flex;
   align-items: center;
