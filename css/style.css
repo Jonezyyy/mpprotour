@@ -684,10 +684,11 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   opacity: 0.5;
 }
 
-/* column header row inside waiting section */
+/* column header row inside waiting section: dot/rank, name, rating, [score], beat.
+   Base rule = no Score column (course has no CRV/par yet to project a score). */
 .next-player-col-header {
   display: grid;
-  grid-template-columns: 22px 1fr 44px 110px;
+  grid-template-columns: 22px 1fr 52px 116px;
   gap: 0 0.6rem;
   padding: 0.2rem 0 0.35rem;
   border-bottom: 1px solid var(--border);
@@ -696,33 +697,27 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
 }
 
 .next-player-col-header--played {
-  grid-template-columns: 22px 1fr auto;
+  grid-template-columns: 22px 1fr 52px 48px 72px;
 }
 
 .next-player-col-header--with-par {
-  grid-template-columns: 22px 1fr 80px 110px;
+  grid-template-columns: 22px 1fr 52px 48px 116px;
 }
 
-.next-player-col-result {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  opacity: 0.55;
-  text-align: right;
-}
-
+.next-player-col-rating,
+.next-player-col-score,
+.next-player-col-hcscore,
+.next-player-col-par-score,
 .next-player-col-beat {
   font-family: 'Rajdhani', sans-serif;
   font-size: 0.62rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted);
   opacity: 0.55;
   text-align: center;
+  white-space: nowrap;
 }
 
 .next-player-col-beat {
@@ -734,19 +729,19 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
 /* shared grid for both played and waiting rows */
 .next-player {
   display: grid;
-  grid-template-columns: 22px 1fr auto;
+  grid-template-columns: 22px 1fr 52px 48px 72px;
   align-items: center;
   gap: 0 0.6rem;
-  padding: 0.3rem 0;
+  padding: 0.32rem 0;
 }
 
 .next-player--waiting {
-  grid-template-columns: 22px 1fr 110px;
+  grid-template-columns: 22px 1fr 52px 116px;
   opacity: 0.85;
 }
 
 .next-player--waiting.has-par-score {
-  grid-template-columns: 22px 1fr 80px 110px;
+  grid-template-columns: 22px 1fr 52px 48px 116px;
 }
 
 .next-player-info {
@@ -791,20 +786,39 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
 
 .next-player-rating {
   font-family: 'Rajdhani', sans-serif;
-  font-size: 0.7rem;
-  font-weight: 500;
+  font-size: 0.85rem;
+  font-weight: 600;
   color: var(--text-muted);
-  opacity: 0.55;
-  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
-.next-player-result {
+.next-player-rating--unrated {
+  font-size: 0.64rem;
+  font-style: italic;
+  opacity: 0.75;
+  white-space: normal;
+}
+
+.next-player-score {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.next-player-hcscore {
   font-family: 'Rajdhani', sans-serif;
   font-weight: 700;
   font-size: 0.9rem;
   color: var(--text);
+  text-align: center;
   white-space: nowrap;
-  justify-self: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.next-player-dnf {
+  grid-column: span 2;
+  text-align: right;
 }
 
 .next-player-par-score {
@@ -812,25 +826,36 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   font-weight: 700;
   font-size: 0.9rem;
   color: var(--text);
-  text-align: right;
-  justify-self: end;
+  text-align: center;
   white-space: nowrap;
-}
-
-.next-player-col-par-score {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  opacity: 0.55;
-  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .next-player-beat {
   text-align: right;
   justify-self: end;
+}
+
+/* Season-over champion podium row — its own simple layout, deliberately not
+   sharing the scoreboard's .next-player grid so the two can change independently. */
+.next-player-champion {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.32rem 0;
+}
+
+.next-player-champion .next-player-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.next-player-champion-points {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text);
+  white-space: nowrap;
 }
 
 .score-diff {
@@ -899,22 +924,46 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   /* Match the font-size language of the past-competition results table */
   .next-player-list { font-size: 0.8rem; }
   .next-player-info .player-btn { font-size: 0.85rem; }
-  .next-player-rating { font-size: 0.62rem; }
-  .next-player-result,
+  .next-player-rating { font-size: 0.62rem; font-weight: 500; text-align: left; }
+  .next-player-hcscore,
   .next-player-par-score { font-size: 0.85rem; }
   .score-diff { font-size: 0.8rem; }
   .next-player-section-label,
-  .next-player-col-result,
+  .next-player-col-rating,
+  .next-player-col-score,
+  .next-player-col-hcscore,
   .next-player-col-par-score,
   .next-player-col-beat { font-size: 0.55rem; letter-spacing: 0.08em; }
 
-  /* Played rows: 3 cols, name truncates */
-  .next-player,
+  /* Played rows collapse to num | name (+ rating underneath) | HC Score; Score (par diff) hides. */
+  .next-player {
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    gap: 0.1rem 0.5rem;
+  }
+  .next-player-num { grid-column: 1; grid-row: 1; }
+  .next-player-info { grid-column: 2; grid-row: 1; min-width: 0; }
+  .next-player > .next-player-rating {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .next-player-score { display: none; }
+  .next-player-hcscore {
+    grid-column: 3;
+    grid-row: 1;
+    text-align: right;
+  }
+  .next-player-hcscore::before { content: 'HC '; color: var(--text-muted); font-weight: 500; }
+  .next-player-dnf { grid-column: 3; grid-row: 1; }
+
   .next-player-col-header--played {
     grid-template-columns: 22px minmax(0, 1fr) auto;
     gap: 0 0.5rem;
   }
-  .next-player-info { min-width: 0; }
+  .next-player-col-header--played .next-player-col-rating,
+  .next-player-col-header--played .next-player-col-score { display: none; }
+  .next-player-col-header--played .next-player-col-hcscore { text-align: right; }
+
   .next-player-info .player-btn {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -922,13 +971,14 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
     max-width: 100%;
   }
 
-  /* Waiting rows: Par HC as a small stat,
-     and let the (longer) "score to beat" chip wrap to its own line. */
+  /* Waiting rows: rating under the name, Score (par HC) as a small stat,
+     and let the (longer) "score to lead" chip wrap to its own line. */
   .next-player--waiting,
   .next-player--waiting.has-par-score,
   .next-player-col-header,
   .next-player-col-header--with-par {
     grid-template-columns: 14px minmax(0, 1fr) 42px;
+    grid-template-rows: auto auto auto;
     column-gap: 0.5rem;
     row-gap: 0.15rem;
     align-items: center;
@@ -943,6 +993,11 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
     grid-column: 2;
     grid-row: 1;
   }
+  .next-player--waiting .next-player-rating {
+    grid-column: 2;
+    grid-row: 2;
+    text-align: left;
+  }
   .next-player--waiting .next-player-par-score {
     grid-column: 3;
     grid-row: 1;
@@ -952,7 +1007,7 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   /* beat-leader chip: own row spanning right side, only when present */
   .next-player--waiting .next-player-beat {
     grid-column: 2 / -1;
-    grid-row: 2;
+    grid-row: 3;
     justify-self: end;
     text-align: right;
   }
@@ -963,8 +1018,9 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   /* Header row labels mirror the grid columns above */
   .next-player-col-header > span:first-child { grid-column: 1; }
   .next-player-col-header .next-player-col-name { grid-column: 2; }
+  .next-player-col-header .next-player-col-rating { display: none; }
   .next-player-col-par-score { grid-column: 3; text-align: right; }
-  /* Hide the "Score to beat" header on mobile — chip carries its own meaning */
+  /* Hide the "Score to lead" header on mobile — chip carries its own meaning */
   .next-player-col-beat { display: none; }
 
   .beat-leader { font-size: 0.68rem; padding: 1px 5px; }

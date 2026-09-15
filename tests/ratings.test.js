@@ -26,7 +26,7 @@ test('käynnissä olevan kisan Metrix-rating voittaa päättyneiden kisojen rati
 
   const live = site.get(`liveResultsByComp[${TEST_ACTIVE}]['Viljami Julkunen']`);
   assert.ok(Math.abs(live.hcScore - (78 - (1000 - 749) / 7.09)) < 0.01, 'HC lasketaan tuoreella ratingilla');
-  assert.match(site.card(), /Rating 749/);
+  assert.match(site.card(), /class="next-player-rating">749</);
 });
 
 test('Metrixin rating 0 ei ylikirjoita tunnettua ratingia', async () => {
@@ -73,7 +73,7 @@ test('PLAYER_RATINGS antaa ratingin myös pelaajalle jolla ei ole tulosta yhdest
   assert.ok((1000 - rating(site, 'Jukka Autio')) / crv > 0, 'handicap on suurempi kuin nolla');
 
   site.get('renderCurrentComp()');
-  assert.match(site.card(), /Rating 662/);
+  assert.match(site.card(), /class="next-player-rating">662</);
   assert.doesNotMatch(site.card(), /Ei ratingia/, 'kentässä ei ole ratingittomia');
 });
 

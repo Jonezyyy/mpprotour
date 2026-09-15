@@ -720,10 +720,10 @@ function renderSeasonOver(container) {
         <div class="next-registered">
           <p class="next-registered-title">Mestari</p>
           <ul class="next-player-list">
-            <li class="next-player next-player--played">
+            <li class="next-player-champion">
               <span class="next-player-num next-player-num--rank">🥇</span>
               <div class="next-player-info"><button class="player-btn" data-player="${champion.name}">${champion.name}</button></div>
-              <span class="next-player-result">${fmtPts(champion.total)} p</span>
+              <span class="next-player-champion-points">${fmtPts(champion.total)} p</span>
             </li>
           </ul>
         </div>
@@ -836,19 +836,21 @@ function renderCurrentComp() {
     }
   });
 
-  const ratingLabel = (p) => p.rated ? `Rating ${p.rating}` : 'Ei ratingia';
+  const ratingCell = (p) => p.rated
+    ? `<span class="next-player-rating">${p.rating}</span>`
+    : `<span class="next-player-rating next-player-rating--unrated">Ei ratingia</span>`;
 
   const renderPlayedRow = (p) => {
-    const ratingTxt = ratingLabel(p);
+    const nameBtn = `<button class="player-btn" data-player="${p.name}">${p.name}</button>`;
     if (p.dnf) {
       return `<li class="next-player next-player--played">
         <span class="next-player-num next-player-num--rank">${p.rank ?? '–'}</span>
-        <div class="next-player-info"><button class="player-btn" data-player="${p.name}">${p.name}</button>${ratingTxt ? `<span class="next-player-rating">${ratingTxt}</span>` : ''}</div>
-        <span class="next-player-result diff-dnf">DNF</span>
+        <div class="next-player-info">${nameBtn}</div>
+        ${ratingCell(p)}
+        <span class="next-player-dnf diff-dnf">DNF</span>
       </li>`;
     }
     const diff = p.throws - comp.par;
-    const nameBtn = `<button class="player-btn" data-player="${p.name}">${p.name}</button>`;
     const badge = hotRoundBadge(p.hotRound);
     // Kääre vain kuumalle riville, jotta muiden rivien rakenne pysyy ennallaan.
     const nameHtml = badge ? `<span class="next-player-name">${nameBtn}${badge}</span>` : nameBtn;
@@ -856,17 +858,14 @@ function renderCurrentComp() {
     const diffCls = diff > 0 ? 'over-par' : diff < 0 ? 'under-par' : 'even-par';
     return `<li class="next-player next-player--played">
       <span class="next-player-num next-player-num--rank">${p.rank ?? '–'}</span>
-      <div class="next-player-info">${nameHtml}${ratingTxt ? `<span class="next-player-rating">${ratingTxt}</span>` : ''}</div>
-      <span class="next-player-result">HC&nbsp;${Math.round(p.hcScore)}&nbsp;<span class="score-diff ${diffCls}">${diffStr}</span></span>
+      <div class="next-player-info">${nameHtml}</div>
+      ${ratingCell(p)}
+      <span class="next-player-score score-diff ${diffCls}">${diffStr}</span>
+      <span class="next-player-hcscore">${Math.round(p.hcScore)}</span>
     </li>`;
   };
 
   const renderWaitingRow = (p) => {
-    const ratingTxt = ratingLabel(p);
-    let parScoreHtml = '';
-    if (p.parScore != null) {
-      parScoreHtml = `${p.parScore}`;
-    }
     let targetHtml = '';
     if (isActive && bestHC !== null && p.rating && crv) {
       const throwsNeeded = Math.ceil(bestHC + (1000 - p.rating) / crv) - 1;
@@ -876,8 +875,9 @@ function renderCurrentComp() {
     }
     return `<li class="next-player next-player--waiting${p.parScore != null ? ' has-par-score' : ''}">
       <span class="next-player-waiting-dot"></span>
-      <div class="next-player-info"><button class="player-btn" data-player="${p.name}">${p.name}</button>${ratingTxt ? `<span class="next-player-rating">${ratingTxt}</span>` : ''}</div>
-      <span class="next-player-par-score">${parScoreHtml}</span>
+      <div class="next-player-info"><button class="player-btn" data-player="${p.name}">${p.name}</button></div>
+      ${ratingCell(p)}
+      ${p.parScore != null ? `<span class="next-player-par-score">${p.parScore}</span>` : ''}
       <span class="next-player-beat">${targetHtml}</span>
     </li>`;
   };
@@ -885,7 +885,7 @@ function renderCurrentComp() {
   let playerList = '';
   if (playedPlayers.length > 0) {
     playerList += `<li class="next-player-section-label">Pelannut</li>`;
-    playerList += `<li class="next-player-col-header next-player-col-header--played"><span></span><span class="next-player-col-name"></span><span class="next-player-col-result">HC (Par)</span></li>`;
+    playerList += `<li class="next-player-col-header next-player-col-header--played"><span></span><span class="next-player-col-name"></span><span class="next-player-col-rating">Rating</span><span class="next-player-col-score">Score</span><span class="next-player-col-hcscore">HC Score</span></li>`;
     playerList += playedPlayers.map(p => renderPlayedRow(p)).join('');
   }
   if (waitingPlayers.length > 0) {
@@ -893,12 +893,9 @@ function renderCurrentComp() {
       playerList += `<li class="next-player-divider"></li>`;
     }
     const waitingLabel = isActive && playedPlayers.length > 0 ? 'Ei vielä pelannut' : 'Ilmoittautuneet';
-    const showCols = waitingPlayers.some(p => p.parScore !== null);
+    const showParScore = waitingPlayers.some(p => p.parScore != null);
     playerList += `<li class="next-player-section-label">${waitingLabel}</li>`;
-    if (showCols) {
-      const showParScore = waitingPlayers.some(p => p.parScore != null);
-      playerList += `<li class="next-player-col-header${showParScore ? ' next-player-col-header--with-par' : ''}"><span></span><span class="next-player-col-name"></span>${showParScore ? '<span class="next-player-col-par-score">Par HC</span>' : ''}<span class="next-player-col-beat">Score to beat</span></li>`;
-    }
+    playerList += `<li class="next-player-col-header${showParScore ? ' next-player-col-header--with-par' : ''}"><span></span><span class="next-player-col-name"></span><span class="next-player-col-rating">Rating</span>${showParScore ? '<span class="next-player-col-par-score">Score</span>' : ''}<span class="next-player-col-beat">Score to lead</span></li>`;
     playerList += waitingPlayers.map(p => renderWaitingRow(p)).join('');
   }
 
