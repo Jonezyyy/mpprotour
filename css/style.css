@@ -935,9 +935,12 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   .next-player-col-par-score,
   .next-player-col-beat { font-size: 0.55rem; letter-spacing: 0.08em; }
 
-  /* Played rows: num | name | Rating | Score | HC Score, all on one line. */
+  /* Played rows: num | name | Rating | Score | HC Score, all on one line.
+     HC Score is a fixed width (not auto) so it lines up with the header —
+     each <li> is its own grid, so an auto column sizes independently per
+     row/header based on that row's own content ("52" vs "HC Score"). */
   .next-player {
-    grid-template-columns: 22px minmax(0, 1fr) 30px 34px auto;
+    grid-template-columns: 22px minmax(0, 1fr) 30px 34px 44px;
     grid-template-rows: auto;
     gap: 0.1rem 0.5rem;
   }
@@ -963,7 +966,7 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   .next-player-dnf { grid-column: 3 / -1; grid-row: 1; text-align: right; }
 
   .next-player-col-header.next-player-col-header--played {
-    grid-template-columns: 22px minmax(0, 1fr) 30px 34px auto;
+    grid-template-columns: 22px minmax(0, 1fr) 30px 34px 44px;
     gap: 0 0.5rem;
   }
   .next-player-col-header.next-player-col-header--played .next-player-col-rating {
