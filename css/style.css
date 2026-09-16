@@ -971,13 +971,13 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
     max-width: 100%;
   }
 
-  /* Waiting rows: rating under the name, Score (par HC) as a small stat,
-     and let the (longer) "score to lead" chip wrap to its own line. */
+  /* Waiting rows: rating under the name, HC Par hidden to leave room for the
+     name, and let the (longer) "score to lead" chip wrap to its own line. */
   .next-player--waiting,
   .next-player--waiting.has-par-score,
   .next-player-col-header,
   .next-player-col-header--with-par {
-    grid-template-columns: 14px minmax(0, 1fr) 42px;
+    grid-template-columns: 14px minmax(0, 1fr);
     grid-template-rows: auto auto auto;
     column-gap: 0.5rem;
     row-gap: 0.15rem;
@@ -998,11 +998,9 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
     grid-row: 2;
     text-align: left;
   }
+  /* HC Par hides on mobile — no room next to the name */
   .next-player--waiting .next-player-par-score {
-    grid-column: 3;
-    grid-row: 1;
-    justify-self: end;
-    text-align: right;
+    display: none;
   }
   /* beat-leader chip: own row spanning right side, only when present */
   .next-player--waiting .next-player-beat {
@@ -1019,7 +1017,7 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   .next-player-col-header > span:first-child { grid-column: 1; }
   .next-player-col-header .next-player-col-name { grid-column: 2; }
   .next-player-col-header .next-player-col-rating { display: none; }
-  .next-player-col-par-score { grid-column: 3; text-align: right; }
+  .next-player-col-par-score { display: none; }
   /* Hide the "Score to lead" header on mobile — chip carries its own meaning */
   .next-player-col-beat { display: none; }
 
