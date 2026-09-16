@@ -946,21 +946,20 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   .next-player--played > .next-player-rating {
     grid-column: 3;
     grid-row: 1;
-    text-align: right;
+    text-align: center;
     font-size: 0.75rem;
   }
   .next-player-score {
     grid-column: 4;
     grid-row: 1;
-    text-align: right;
+    text-align: center;
     font-size: 0.8rem;
   }
   .next-player-hcscore {
     grid-column: 5;
     grid-row: 1;
-    text-align: right;
+    text-align: center;
   }
-  .next-player-hcscore::before { content: 'HC '; color: var(--text-muted); font-weight: 500; }
   .next-player-dnf { grid-column: 3 / -1; grid-row: 1; text-align: right; }
 
   .next-player-col-header.next-player-col-header--played {
@@ -969,14 +968,14 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   }
   .next-player-col-header.next-player-col-header--played .next-player-col-rating {
     display: block;
-    text-align: right;
+    text-align: center;
     font-size: 0.5rem;
   }
   .next-player-col-header--played .next-player-col-score {
-    text-align: right;
+    text-align: center;
     font-size: 0.52rem;
   }
-  .next-player-col-header--played .next-player-col-hcscore { text-align: right; }
+  .next-player-col-header--played .next-player-col-hcscore { text-align: center; }
 
   .next-player-info .player-btn {
     overflow: hidden;
@@ -985,14 +984,14 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
     max-width: 100%;
   }
 
-  /* Waiting rows: rating under the name, HC Par as a slim third column,
-     and let the (longer) "score to lead" chip wrap to its own line. */
+  /* Waiting rows: Rating as its own column (like desktop), HC Par hidden,
+     as its own column alongside Rating. */
   .next-player--waiting,
   .next-player--waiting.has-par-score,
   .next-player-col-header,
   .next-player-col-header--with-par {
-    grid-template-columns: 14px minmax(0, 1fr) 34px;
-    grid-template-rows: auto auto auto;
+    grid-template-columns: 14px minmax(0, 1fr) 30px 90px;
+    grid-template-rows: auto;
     column-gap: 0.5rem;
     row-gap: 0.15rem;
     align-items: center;
@@ -1008,21 +1007,17 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
     grid-row: 1;
   }
   .next-player--waiting .next-player-rating {
-    grid-column: 2;
-    grid-row: 2;
-    text-align: left;
-  }
-  .next-player--waiting .next-player-par-score {
     grid-column: 3;
     grid-row: 1;
-    justify-self: end;
-    text-align: right;
-    font-size: 0.8rem;
+    text-align: center;
+    font-size: 0.75rem;
   }
-  /* beat-leader chip: own row spanning right side, only when present */
+  .next-player--waiting .next-player-par-score {
+    display: none;
+  }
   .next-player--waiting .next-player-beat {
-    grid-column: 2 / -1;
-    grid-row: 3;
+    grid-column: 4;
+    grid-row: 1;
     justify-self: end;
     text-align: right;
   }
@@ -1033,14 +1028,18 @@ a { color: var(--accent); text-decoration: none; transition: color var(--ease); 
   /* Header row labels mirror the grid columns above */
   .next-player-col-header > span:first-child { grid-column: 1; }
   .next-player-col-header .next-player-col-name { grid-column: 2; }
-  .next-player-col-header .next-player-col-rating { display: none; }
-  .next-player-col-par-score {
+  .next-player-col-header .next-player-col-rating {
+    display: block;
     grid-column: 3;
-    text-align: right;
-    font-size: 0.52rem;
+    text-align: center;
+    font-size: 0.5rem;
   }
-  /* Hide the "Score to lead" header on mobile — chip carries its own meaning */
-  .next-player-col-beat { display: none; }
+  .next-player-col-par-score { display: none; }
+  .next-player-col-header .next-player-col-beat {
+    display: block;
+    grid-column: 4;
+    text-align: right;
+  }
 
   .beat-leader { font-size: 0.68rem; padding: 1px 5px; }
 }
