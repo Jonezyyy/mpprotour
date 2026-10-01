@@ -64,6 +64,25 @@ const COMPETITIONS = [
       'Jukka Vesa'
     ]
   },
+  {
+    state: 'next',
+    id: 3808552,
+    name: 'Herusten',
+    fullName: 'MP Pro Tour 2027 – Herusten',
+    date: '2026-10-31',
+    course: 'Nurmijärvi-Herusten frisbeegolfrata → 2023',
+    location: 'Nurmijärvi, Uusimaa',
+    par: 58,
+    holes: 18,
+    courseRatingValue: 12.01,
+    registrationEnd: '2026-10-31',
+    url: 'https://discgolfmetrix.com/3808552',
+    registerUrl: 'https://discgolfmetrix.com/?u=register_add&ID=3808552',
+    registered: [
+      'Erno Ekebom',
+      'Jukka Vesa'
+    ]
+  },
 
   // ── Päättyneet ─────────────────────────────────────────────────
   // (kauden 2026 tulokset ovat COMPETITIONS_2026:ssa ja näkyvät 2026.html:ssä)
