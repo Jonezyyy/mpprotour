@@ -40,7 +40,7 @@ test('Metrixin rating 0 ei ylikirjoita tunnettua ratingia', async () => {
 test('rating tulee viimeisimmästä kilpailusta, ei PLAYER_RATINGS-taulukosta', async () => {
   // Testikisa A sulkeutuu ja antaa Tomi S:lle uuden ratingin 771.
   const kentta = TEST_ACTIVE_FIELD.map(([n, r, t]) => n === 'Tomi S' ? [n, 771, t] : [n, r, t]);
-  const site = loadSite({ results: { [TEST_ACTIVE]: railwayResults(kentta, 7.2) } });
+  const site = loadSite({ today: '2026-09-02', results: { [TEST_ACTIVE]: railwayResults(kentta, 7.2) } });
 
   assert.equal(site.get("PLAYER_RATINGS['Tomi S']"), 764, 'taulukossa vanha arvo');
   await site.run('fetchAllCompetitionResults()');
@@ -100,7 +100,7 @@ test('live-tulokset lasketaan kunkin kilpailun omalla crv:llä', async () => {
   await active.run('fetchCurrentCompLiveResults()');
   const hcActive = active.get(`liveResultsByComp[${TEST_ACTIVE}][${JSON.stringify(nimi)}].hcScore`);
 
-  const next = loadSite({
+  const next = loadSite({ today: '2026-09-02',
     results: { [TEST_ACTIVE]: railwayResults(TEST_ACTIVE_FIELD, 7.2) },
     metrix: { [TEST_NEXT]: metrixLive([[nimi, heitot]]) }
   });
@@ -113,7 +113,7 @@ test('live-tulokset lasketaan kunkin kilpailun omalla crv:llä', async () => {
 });
 
 test('yhden kisan live-tulokset eivät vuoda toiseen kisaan', async () => {
-  const site = loadSite({
+  const site = loadSite({ today: '2026-09-02',
     results: { [TEST_ACTIVE]: railwayResults(TEST_ACTIVE_FIELD, 7.2) },
     metrix: { [TEST_NEXT]: metrixLive([['Tomi S', 71]]) }
   });

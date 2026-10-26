@@ -64,8 +64,9 @@ const winner = calcRoundedResults(comp).find(r => r.place === 1);
 
 - **Näytettävä kilpailu** = päivämäärältään vanhin ei-päättynyt. Se näkyy "Käynnissä",
   jos tila on `'active'` tai Metrixissä on jo tuloksia.
-- **Sulkeminen** (`isReadyToClose` app.js:ssä): kilpailu suljetaan kun kaikilla
-  ilmoittautuneilla on tulos **tai** kilpailun `date` on ohi. Päättynyttä ei avata uudelleen.
+- **Sulkeminen** (`isReadyToClose` app.js:ssä): kilpailu suljetaan vasta kun sen `date` on ohi,
+  vaikka kaikki ilmoittautuneet olisivat jo pelanneet, koska Metrixissä voi liittyä ja pelata
+  viimeiseen päivään asti. Päättynyttä ei avata uudelleen.
 - Backendin `completed: true` **ei** tarkoita että kisa on ohi: Metrix lisää WeeklyHC-rivin
   jokaiselle pelaajalle heti kun hänen kierroksensa on kirjattu. Osakilpailut ovat kuukauden auki.
 - **Radan CRV** (`courseCrv`): live-handicapit ja live-kortti käyttävät radan Metrix-ratinglinjaa

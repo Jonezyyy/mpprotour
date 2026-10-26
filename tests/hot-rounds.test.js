@@ -119,7 +119,7 @@ test('live-kortti ei merkitse kierrosta ilman kierroksen omaa ratingia tai radan
 
 test('kauden aikana päättyneen kisan tulostaulukko merkitsee kuuman kierroksen', async () => {
   // Molemmat pelanneet → kisa sulkeutuu. Tomi S 78 (+56, kuuma), Jukka Vesa 82 (ei).
-  const site = loadSite({
+  const site = loadSite({ today: '2026-09-02',
     results: { [TEST_ACTIVE]: railwayResults([['Tomi S', 764, 78], ['Jukka Vesa', 933, 82]], null, true, ROUND_LAYOUT) }
   });
   await site.run('fetchAllCompetitionResults()');
@@ -157,7 +157,7 @@ test('arkisto näyttää kuuman kierroksen jäädytetyistä arvoista, ei ilman n
 
 test('kausitilanne ei näytä kuumia kierroksia', async () => {
   // Kisa päättyy Tomi S:n kuumalla kierroksella (+56); kausitilanteessa ei silti merkkiä.
-  const site = loadSite({
+  const site = loadSite({ today: '2026-09-02',
     results: { [TEST_ACTIVE]: railwayResults([['Tomi S', 764, 78], ['Jukka Vesa', 933, 82]], null, true, ROUND_LAYOUT) }
   });
   await site.run('fetchAllCompetitionResults()');

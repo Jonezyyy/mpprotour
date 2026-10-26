@@ -1184,17 +1184,15 @@ function initScrollReveal() {
 
 // Metrix täyttää WeeklyHC:n pelaaja kerrallaan heti kun kierros kirjataan, joten
 // backendin `completed` on tosi jo ensimmäisen tuloksen jälkeen (todettu Sibbessä
-// 2026). Kuukauden mittainen osakilpailu suljetaan siksi vasta kun kaikki
-// ilmoittautuneet ovat pelanneet tai kilpailun viimeinen päivä on ohi.
+// 2026). Osakilpailu suljetaan vasta kun sen viimeinen päivä on ohi, koska
+// ilmoittautuminen ja pelaaminen jatkuvat Metrixissä päivään asti.
 function todayISO() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function isReadyToClose(comp, players) {
-  const allPlayed = players.every(p => p.throws > 0);
-  const datePassed = !!comp.date && todayISO() > comp.date;
-  return allPlayed || datePassed;
+function isReadyToClose(comp) {
+  return !!comp.date && todayISO() > comp.date;
 }
 
 async function fetchAllCompetitionResults() {
@@ -1219,7 +1217,7 @@ async function fetchAllCompetitionResults() {
       const crv = metrixCrv || courseCrv(comp);
       if (!crv) return;
 
-      if (comp.state !== 'over' && !isReadyToClose(comp, data.players)) return;
+      if (comp.state !== 'over' && !isReadyToClose(comp)) return;
 
       comp.results = data.players.map(p => {
         if (p.dnf || p.throws === null || !(p.throws > 0)) {

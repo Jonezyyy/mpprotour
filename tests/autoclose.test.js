@@ -56,7 +56,7 @@ test('kilpailu sulkeutuu kun viimeinen päivä on ohi, vaikka kaikki eivät pela
 });
 
 test('valmis kilpailu siirtyy tuloksiin ja seuraava nousee esiin', async () => {
-  const site = loadSite({ results: { [TEST_ACTIVE]: activeOhi() } });
+  const site = loadSite({ today: '2026-09-02', results: { [TEST_ACTIVE]: activeOhi() } });
   await site.run('fetchAllCompetitionResults()');
 
   assert.deepEqual(site.compNames(), [...PLAYED, 'Testikisa A'], 'päivämääräjärjestyksessä viimeisenä');
@@ -65,7 +65,7 @@ test('valmis kilpailu siirtyy tuloksiin ja seuraava nousee esiin', async () => {
 });
 
 test('Metrixin laskema crv korvaa data.js:n käsin syötetyn arvion', async () => {
-  const site = loadSite({ results: { [TEST_ACTIVE]: activeOhi() } });
+  const site = loadSite({ today: '2026-09-02', results: { [TEST_ACTIVE]: activeOhi() } });
   assert.equal(site.comp(TEST_ACTIVE).courseRatingValue, 7.09, 'lähtöarvo data.js:stä');
 
   await site.run('fetchAllCompetitionResults()');
@@ -75,7 +75,7 @@ test('Metrixin laskema crv korvaa data.js:n käsin syötetyn arvion', async () =
 test('kilpailu sulkeutuu käsin syötetyllä crv:llä kun Metrix ei laske handicapeja', async () => {
   // Metrix palauttaa WeeklyHC:n ratingeineen mutta HC-kentät tyhjinä, jolloin
   // backend ei saa laskettua crv:tä (näin kävi Kantolassa 2026).
-  const site = loadSite({ results: { [TEST_ACTIVE]: railwayResults(TEST_ACTIVE_FIELD, null) } });
+  const site = loadSite({ today: '2026-09-02', results: { [TEST_ACTIVE]: railwayResults(TEST_ACTIVE_FIELD, null) } });
   await site.run('fetchAllCompetitionResults()');
 
   assert.ok(site.compNames().includes('Testikisa A'), 'kisa ei saa jäädä auki');
@@ -96,16 +96,27 @@ test('kilpailu jää auki jos crv:tä ei ole mistään saatavilla', async () => 
   assert.equal(site.current().name, 'Testikisa A');
 });
 
-test('kilpailut sulkeutuvat toisistaan riippumatta', async () => {
-  // Testikisa B ehtii maaliin ensin, Testikisa A on yhä kesken.
+test('kilpailut sulkeutuvat kukin oman päivämääränsä mukaan', async () => {
+  // Testikisa A:n päivä on ohi (kesken, osa ei pelannut) → sulkeutuu.
+  // Testikisa B:n kaikki ovat pelanneet, mutta sen päivä ei ole ohi → pysyy auki.
   const kesken = TEST_ACTIVE_FIELD.map(([n, r, t], i) => [n, r, i < 2 ? t : null]);
   const site = loadSite({
-    results: { [TEST_ACTIVE]: railwayResults(kesken, 7.09), [TEST_NEXT]: nextOhi() }
+    results: { [TEST_ACTIVE]: railwayResults(kesken, 7.09), [TEST_NEXT]: nextOhi() },
+    today: '2026-09-02'
   });
   await site.run('fetchAllCompetitionResults()');
 
-  assert.deepEqual(site.compNames(), [...PLAYED, 'Testikisa B']);
-  assert.equal(site.current().name, 'Testikisa A', 'kesken oleva pysyy esillä');
+  assert.deepEqual(site.compNames(), [...PLAYED, 'Testikisa A']);
+  assert.equal(site.current().name, 'Testikisa B', 'B pysyy esillä päivään asti');
+});
+
+test('kilpailu pysyy auki vaikka kaikki ilmoittautuneet ovat jo pelanneet', async () => {
+  // Metrixissä voi liittyä ja pelata vielä kisan viimeiseen päivään asti.
+  const site = loadSite({ results: { [TEST_ACTIVE]: activeOhi() }, today: '2026-09-01' });
+  await site.run('fetchAllCompetitionResults()');
+
+  assert.equal(site.current().name, 'Testikisa A');
+  assert.ok(!site.compNames().includes('Testikisa A'), 'ei vielä tuloksissa');
 });
 
 test('päättynyttä kilpailua ei avata uudelleen', async () => {
@@ -128,7 +139,7 @@ test('backendin ollessa alhaalla tila pysyy data.js:n mukaisena', async () => {
 });
 
 test('kauden viimeisen kisan jälkeen näytetään kausi päättyneeksi', async () => {
-  const site = loadSite({ results: { [TEST_ACTIVE]: activeOhi(), [TEST_NEXT]: nextOhi() } });
+  const site = loadSite({ today: '2026-09-03', results: { [TEST_ACTIVE]: activeOhi(), [TEST_NEXT]: nextOhi() } });
   // Täydennetään testikausi täyteen mittaan: 6 päättynyttä + 2 sulkeutuvaa = TOTAL_EVENTS.
   site.get(`(() => {
     const base = COMPETITIONS.find(c => c.id === ${TEST_OVER_1});
@@ -148,7 +159,7 @@ test('kauden viimeisen kisan jälkeen näytetään kausi päättyneeksi', async 
 
 test('kausi ei pääty vaikka yhtään avointa kisaa ei ole, jos kisoja on vielä pelaamatta', async () => {
   // Kävisi esim. kun kauden ensimmäinen kisa sulkeutuu ennen kuin toinen on lisätty.
-  const site = loadSite({ results: { [TEST_ACTIVE]: activeOhi(), [TEST_NEXT]: nextOhi() } });
+  const site = loadSite({ today: '2026-09-03', results: { [TEST_ACTIVE]: activeOhi(), [TEST_NEXT]: nextOhi() } });
   await site.run('fetchAllCompetitionResults()');
 
   assert.equal(site.current(), null);
@@ -161,7 +172,7 @@ test('kausi ei pääty vaikka yhtään avointa kisaa ei ole, jos kisoja on viel�
 test('kesken oleva kisa merkitään käynnissä olevaksi heti kun tuloksia ilmestyy', async () => {
   // Testikisa A kiinni → Testikisa B esiin. data.js:ssä se on 'next', mutta
   // Metrixissä on jo tuloksia, joten kortin pitää näyttää se käynnissä olevana.
-  const site = loadSite({
+  const site = loadSite({ today: '2026-09-02',
     results: { [TEST_ACTIVE]: activeOhi() },
     metrix: { [TEST_NEXT]: metrixLive([['Tomi S', 71], ['Jukka Vesa', 58]]) }
   });
@@ -174,7 +185,7 @@ test('kesken oleva kisa merkitään käynnissä olevaksi heti kun tuloksia ilmes
 });
 
 test('ilman tuloksia seuraava kisa näkyy tulossa olevana', async () => {
-  const site = loadSite({
+  const site = loadSite({ today: '2026-09-02',
     results: { [TEST_ACTIVE]: activeOhi() },
     metrix: { [TEST_NEXT]: metrixLive([['Tomi S', 0], ['Jukka Vesa', 0]]) }
   });

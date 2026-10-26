@@ -34,7 +34,7 @@ place   = count of players with Math.round(hcScore) < Math.round(own hcScore), +
 `state` in `data.js` is only the starting point; the site changes it in memory at runtime.
 
 - **Current competition** = the earliest non-`over` competition by date. It shows as "Käynnissä" if its state is `active` or Metrix already has scores for it.
-- **Closing** (`isReadyToClose`): a competition closes when every registrant has a score **or** its `date` has passed. A closed competition is never reopened.
+- **Closing** (`isReadyToClose`): a competition closes only once its `date` has passed, even if every registrant has already played, because people can still join and play on Metrix until the last day. A closed competition is never reopened.
 - **Why not just `completed`:** Metrix adds a `WeeklyHC` row (Rating, HC) for each player as soon as their round is scored, so the backend reports `completed: true` after the very first round. Competitions run for a month.
 - **Course CRV:** `courseCrv(comp)` gives the CRV for live handicaps and the live card: the course's Metrix rating line (`layout.ratingPerThrow`, fetched automatically) first, the hand-entered `courseRatingValue` only as a fallback (course not yet rated by Metrix, or backend down). When a competition closes, the CRV Metrix derives from the players' actual handicaps (`crv`) wins; if Metrix returns `HC: null` for every row (Kantola 2026) it falls back to `courseCrv`, so the competition never stays open forever.
 - **No open competition:** the "Kausi päättynyt" card appears only once `TOTAL_EVENTS` competitions are over. Before that, the card says the next competition is "Julkaistaan pian".

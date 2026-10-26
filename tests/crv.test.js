@@ -54,7 +54,7 @@ test('backendin ollessa alhaalla live-handicapit lasketaan käsin syötetyllä C
 });
 
 test('sulkeutuessa Metrixin handicapeista laskettu CRV voittaa radan CRV:n', async () => {
-  const site = loadSite({ results: { [TEST_ACTIVE]: railwayResults(TEST_ACTIVE_FIELD, 7.2, true, LAYOUT) } });
+  const site = loadSite({ today: '2026-09-02', results: { [TEST_ACTIVE]: railwayResults(TEST_ACTIVE_FIELD, 7.2, true, LAYOUT) } });
   await site.run('fetchAllCompetitionResults()');
 
   assert.ok(Math.abs(closedRow(site, 'Tomi S').hc - (1000 - TOMI) / 7.2) < 1e-9);
@@ -62,7 +62,7 @@ test('sulkeutuessa Metrixin handicapeista laskettu CRV voittaa radan CRV:n', asy
 
 test('sulkeutuessa ilman handicapeja käytetään radan CRV:tä ennen käsin syötettyä', async () => {
   // Kantola 2026 -tapaus: WeeklyHC:n HC-kentät tyhjiä → backendin crv on null.
-  const site = loadSite({ results: { [TEST_ACTIVE]: railwayResults(TEST_ACTIVE_FIELD, null, true, LAYOUT) } });
+  const site = loadSite({ today: '2026-09-02', results: { [TEST_ACTIVE]: railwayResults(TEST_ACTIVE_FIELD, null, true, LAYOUT) } });
   await site.run('fetchAllCompetitionResults()');
 
   assert.ok(site.compNames().includes('Testikisa A'), 'kisa sulkeutuu');

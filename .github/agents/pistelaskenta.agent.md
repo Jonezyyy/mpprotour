@@ -47,7 +47,7 @@ Metrixin `Rating: 0` = ei ratingia.
 
 ## Tilamalli
 
-`state` data.js:ssä on lähtötilanne; sivusto sulkee kilpailun itse ajon aikana, kun kaikilla ilmoittautuneilla on tulos tai kilpailun päivä on ohi. Tuloksia **ei** kirjoiteta käsin data.js:ään kauden aikana.
+`state` data.js:ssä on lähtötilanne; sivusto sulkee kilpailun itse ajon aikana vasta kun kilpailun päivä on ohi (vaikka kaikilla ilmoittautuneilla olisi jo tulos). Tuloksia **ei** kirjoiteta käsin data.js:ään kauden aikana.
 
 ## Tulosrivit arkistossa
 
